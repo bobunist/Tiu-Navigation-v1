@@ -156,11 +156,26 @@ fun Map3(
             derivedStateOf {
                 val pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height);
                 { drawScope: DrawScope ->
-                    drawScope.drawPoints(pathsAndObjects.objects.objects, PointMode.Points, Color.Red, 10f)
+                    drawScope.drawPoints(pathsAndObjects.objects.objects,
+                        PointMode.Points, pathsAndObjects.objects.color, 30f)
 
-                    for (path in pathsAndObjects.roomsPath.paths) {
-                        drawScope.drawPath(path, Color.Green, style = Stroke(10f))
-                    }
+                    for (path in pathsAndObjects.roomsPath.paths)
+                        drawScope.drawPath(path, pathsAndObjects.roomsPath.color, style = Stroke(10f))
+
+                    for (path in pathsAndObjects.elevatorsPath.paths)
+                        drawScope.drawPath(path, pathsAndObjects.elevatorsPath.color, style = Stroke(10f))
+
+                    for (path in pathsAndObjects.outerWallPath.paths)
+                        drawScope.drawPath(path, pathsAndObjects.outerWallPath.color, style = Stroke(10f))
+
+                    for (path in pathsAndObjects.internalWallsPath.paths)
+                        drawScope.drawPath(path, pathsAndObjects.internalWallsPath.color, style = Stroke(10f))
+
+                    for (path in pathsAndObjects.othersPath.paths)
+                        drawScope.drawPath(path, pathsAndObjects.othersPath.color, style = Stroke(10f))
+
+                    for (path in pathsAndObjects.stairsPath.paths)
+                        drawScope.drawPath(path, pathsAndObjects.stairsPath.color, style = Stroke(10f))
                 }
             }
         }
