@@ -1,7 +1,6 @@
 package com.example.tiunavigationv1.feature_map.presentation.map.components
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
@@ -123,8 +122,8 @@ fun Map3(
     val height = width / 3 * 2
     val (isDataLoaded, setDataLoaded) = remember { mutableStateOf(false) }
 
-    LaunchedEffect(floorState.value) {
-        delay(50)
+    LaunchedEffect(floorState.value.paths) {
+
         setDataLoaded(false)
         if (floorState.value.points.isNotEmpty() && floorState.value.paths.isNotEmpty()) {
             setDataLoaded(true)
@@ -214,7 +213,6 @@ fun initMap(
             PathType.OTHER -> {paths.othersPath.paths.add(path)}
         }
     }
-    Log.d("Init", paths.objects.objects.size.toString())
     return paths
 }
 

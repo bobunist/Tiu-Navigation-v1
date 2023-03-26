@@ -1,7 +1,5 @@
 package com.example.tiunavigationv1.feature_map.presentation.map
 
-import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -64,7 +62,6 @@ class MapScreenViewModel@Inject constructor(
             viewModelScope.launch {
                 getFloorsByBuilding(currentBuildingId!!)
                 loadFloor()
-                Log.d("loadFloor", _floorState.value.points.size.toString())
             }
         }
     }
