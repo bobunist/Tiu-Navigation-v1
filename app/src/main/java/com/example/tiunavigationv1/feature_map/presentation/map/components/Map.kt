@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -12,7 +11,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.example.tiunavigationv1.feature_map.domain.model.Point
@@ -22,117 +20,98 @@ import com.example.tiunavigationv1.feature_map.domain.util.PointType
 import com.example.tiunavigationv1.feature_map.presentation.map.FloorState
 import com.example.tiunavigationv1.feature_map.presentation.map.PathsAndObjectsHolderForDrawing
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.StateFlow
 import com.example.tiunavigationv1.feature_map.domain.model.Path as PathModel
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.input.pointer.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 
-//@Composable
-//fun Map(modifier: Modifier = Modifier,
-//        floorState: StateFlow<FloorState>,
-//        configuration: Configuration,
-//        density: Density
-//) {
-//
-//
-//    val floorState = floorState.collectAsState()
-//    var pathsAndObjects: MutableState<PathsAndObjectsHolderForDrawing> = remember { mutableStateOf(PathsAndObjectsHolderForDrawing()) }
-//
-//
-//    LaunchedEffect(floorState.value) {
-//        val floor = floorState.value
-//        pathsAndObjects.value = withContext(Dispatchers.Default) {
-//            initMap(floor.points, floor.paths,
-//                configuration.screenWidthDp.toFloat() * density.density,
-//                configuration.screenWidthDp.toFloat() * density.density
-//            )
-//        }
-//    }
-//
-//    val paint = Paint()
-//    paint.color = Color.Red
-//    paint.strokeWidth = 10f
-//    val block: MutableState<Canvas.() -> Unit> =
-//        remember { mutableStateOf( {drawPoints(PointMode.Points, listOf(Offset(450f, 450f)), paint) } ) }
-//
-//    Canvas(
-//        modifier = modifier
-//            .aspectRatio(3 / 2f)
-//            .fillMaxSize()
-//    ) {
-//        val height = size.height
-//        val width = size.width
-//
-//        floorState.value.let {
-//            drawPoints(pathsAndObjects.value.objects.objects, PointMode.Points, Color.Red, 10f)
-//        }
-//    }
-//}
-//
-//@Composable
-//fun Map1(
-//    modifier: Modifier = Modifier,
-//    floorState: StateFlow<FloorState>,
-//    configuration: Configuration,
-//    density: Density
-//) {
-//    val paint = remember { Paint().apply {
-//        color = Color.Red
-//        strokeWidth = 10f
-//    } }
-//
-//    val pathsAndObjects by remember { mutableStateOf(PathsAndObjectsHolderForDrawing()) }
-//
-//    LaunchedEffect(floorState.value) {
-//        val width = configuration.screenWidthDp.toFloat() * density.density
-//        val height = configuration.screenWidthDp.toFloat() * density.density
-//
-//        val newPathsAndObjects = withContext(Dispatchers.Default) {
-//            initMap(floorState.value.points, floorState.value.paths, width, height)
-//        }
-//
-//        pathsAndObjects.elevatorsPath.paths = newPathsAndObjects.elevatorsPath.paths
-//        pathsAndObjects.stairsPath.paths = newPathsAndObjects.stairsPath.paths
-//        pathsAndObjects.roomsPath.paths = newPathsAndObjects.roomsPath.paths
-//        pathsAndObjects.outerWallPath.paths = newPathsAndObjects.outerWallPath.paths
-//        pathsAndObjects.internalWallsPath.paths = newPathsAndObjects.internalWallsPath.paths
-//        pathsAndObjects.othersPath.paths = newPathsAndObjects.othersPath.paths
-//        pathsAndObjects.objects.objects = newPathsAndObjects.objects.objects
-//    }
-//
-//    Canvas(
-//        modifier = modifier
-//            .aspectRatio(3 / 2f)
-//            .fillMaxSize()
-//    ) {
-//        pathsAndObjects.elevatorsPath.paths.let {
-//            for (path in it) drawPath(path, Color.Blue, paint.strokeWidth)
-//        }
-//
-//        pathsAndObjects.stairsPath.paths.let {
-//            for (path in it) drawPath(path, Color.Green, paint.strokeWidth)
-//        }
-//
-//        pathsAndObjects.roomsPath.paths.let {
-//            for (path in it) drawPath(path, Color.Yellow, paint.strokeWidth)
-//        }
-//
-//        pathsAndObjects.outerWallPath.paths.let {
-//            for (path in it) drawPath(path, Color.Gray, paint.strokeWidth)
-//        }
-//
-//        pathsAndObjects.internalWallsPath.paths.let {
-//            for (path in it) drawPath(path, Color.LightGray, paint.strokeWidth)
-//        }
-//
-//        pathsAndObjects.othersPath.paths.let {
-//            for (path in it) drawPath(path, Color.Cyan, paint.strokeWidth)
-//        }
-//        pathsAndObjects.objects.objects.let {
-//            drawPoints(pathsAndObjects.objects.objects, PointMode.Points, Color.Red, 10f)
-//        }
-//
-//    }
-//}
+private fun distanceBetweenPoints(a: Offset, b: Offset): Float {
+    return sqrt((a.x - b.x).pow(2) + (a.y - b.y).pow(2))
+}
 
+
+// Кастомный PointerInputFilter для обработки касаний
+class PointTapFilter(
+    private val points: List<Offset>,
+    private val radius: Float,
+    private val onPointTapped: (Offset) -> Unit
+) : PointerInputFilter() {
+    override fun onCancel() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onPointerEvent(
+        pointerEvent: PointerEvent,
+        pass: androidx.compose.ui.input.pointer.PointerEventPass,
+        bounds: androidx.compose.ui.geometry.Size
+    ) {
+        pointerEvent.changes.forEach { change ->
+            if (pass == androidx.compose.ui.input.pointer.PointerEventPass.Main && change.changedToUp()) {
+                val touchPoint = change.position
+                points.forEach { point ->
+                    if (distanceBetweenPoints(point, touchPoint) <= radius) {
+                        onPointTapped(point)
+                    }
+                }
+                change.consumeDownChange()
+            }
+        }
+    }
+}
+
+@Composable
+fun Map3(
+    modifier: Modifier = Modifier,
+    floorState: State<FloorState>,
+    configuration: Configuration,
+    density: Density,
+    onPointClick: (Offset) -> Unit
+) {
+    // Остальной код...
+    val pointRadius = 15f
+
+    if (isDataLoaded) {
+        val drawContent by remember(floorState.value) {
+            derivedStateOf {
+                val pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height)
+                pathsAndObjects
+            }
+        }
+
+        Canvas(
+            modifier = modifier
+                .aspectRatio(3 / 2f)
+                .fillMaxSize()
+                .detectTapGestures(
+                    PointTapFilter(
+                        points = drawContent.objects.objects,
+                        radius = pointRadius,
+                        onPointTapped = onPointClick
+                    )
+                )
+        ) {
+            drawIntoCanvas { canvas ->
+                // ...
+                for (point in drawContent.objects.objects) {
+                    canvas.drawCircle(
+                        center = point,
+                        radius = pointRadius,
+                        paint = Paint().apply {
+                            color = drawContent.objects.color
+                        }
+                    )
+                }
+            }
+        }
+    } else {
+        Text(text = "Загрузка...")
+    }
+}
 @Composable
 fun Map3(
     modifier: Modifier = Modifier,
