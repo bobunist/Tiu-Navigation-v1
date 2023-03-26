@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -244,6 +245,7 @@ fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
             }
         }
     }
+    path.close()
     return path
 }
 

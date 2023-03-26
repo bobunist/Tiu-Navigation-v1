@@ -24,18 +24,18 @@ fun FloorBar(
     floorList: List<Floor>,
     onClick: (Long) -> Unit,
     currentFloor: Floor? = null
-){
+) {
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.large,
-
+        color = colors.surface.copy(alpha = 0.5f),
     ) {
         LazyColumn(
             Modifier
                 .fillMaxSize()
-                .background(gray)
+                .background(gray.copy(alpha = 0.5f))
         ) {
-            items(floorList){ item ->
+            items(floorList) { item ->
                 val color = remember {
                     mutableStateOf(light_gray)
                 }
@@ -48,9 +48,10 @@ fun FloorBar(
                     shape = MaterialTheme.shapes.large,
                     onClick = { onClick(item.floorId!!) }
                 ) {
-                    Column(modifier = Modifier
-                        .fillMaxSize()
-                        .background(color.value),
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(color.value),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -58,32 +59,10 @@ fun FloorBar(
                             style = MaterialTheme.typography.body1)
                     }
                 }
-
             }
         }
-
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun Prev(){
-//    Column(modifier = Modifier
-//        .background(light_gray)
-//        .fillMaxSize()) {
-//
-//    }
-//    FloorBar(
-//        Modifier
-//            .height(400.dp)
-//            .width(30.dp),
-//        listOf(
-//            Floor(null, "1", 1),
-//            Floor(null, "2", 1),
-//            Floor(null, "3", 1),
-//            Floor(null, "4", 1),
-//            Floor(null, "5", 1)
-//        ),
-//        onClick = viewModel()
-//    )
-//}
+
+
