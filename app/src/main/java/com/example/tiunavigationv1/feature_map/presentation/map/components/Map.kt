@@ -35,83 +35,83 @@ private fun distanceBetweenPoints(a: Offset, b: Offset): Float {
 }
 
 
-// Кастомный PointerInputFilter для обработки касаний
-class PointTapFilter(
-    private val points: List<Offset>,
-    private val radius: Float,
-    private val onPointTapped: (Offset) -> Unit
-) : PointerInputFilter() {
-    override fun onCancel() {
-        TODO("Not yet implemented")
-    }
-
-    override fun onPointerEvent(
-        pointerEvent: PointerEvent,
-        pass: androidx.compose.ui.input.pointer.PointerEventPass,
-        bounds: androidx.compose.ui.geometry.Size
-    ) {
-        pointerEvent.changes.forEach { change ->
-            if (pass == androidx.compose.ui.input.pointer.PointerEventPass.Main && change.changedToUp()) {
-                val touchPoint = change.position
-                points.forEach { point ->
-                    if (distanceBetweenPoints(point, touchPoint) <= radius) {
-                        onPointTapped(point)
-                    }
-                }
-                change.consumeDownChange()
-            }
-        }
-    }
-}
-
-@Composable
-fun Map3(
-    modifier: Modifier = Modifier,
-    floorState: State<FloorState>,
-    configuration: Configuration,
-    density: Density,
-    onPointClick: (Offset) -> Unit
-) {
-    // Остальной код...
-    val pointRadius = 15f
-
-    if (isDataLoaded) {
-        val drawContent by remember(floorState.value) {
-            derivedStateOf {
-                val pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height)
-                pathsAndObjects
-            }
-        }
-
-        Canvas(
-            modifier = modifier
-                .aspectRatio(3 / 2f)
-                .fillMaxSize()
-                .detectTapGestures(
-                    PointTapFilter(
-                        points = drawContent.objects.objects,
-                        radius = pointRadius,
-                        onPointTapped = onPointClick
-                    )
-                )
-        ) {
-            drawIntoCanvas { canvas ->
-                // ...
-                for (point in drawContent.objects.objects) {
-                    canvas.drawCircle(
-                        center = point,
-                        radius = pointRadius,
-                        paint = Paint().apply {
-                            color = drawContent.objects.color
-                        }
-                    )
-                }
-            }
-        }
-    } else {
-        Text(text = "Загрузка...")
-    }
-}
+//// Кастомный PointerInputFilter для обработки касаний
+//class PointTapFilter(
+//    private val points: List<Offset>,
+//    private val radius: Float,
+//    private val onPointTapped: (Offset) -> Unit
+//) : PointerInputFilter() {
+//    override fun onCancel() {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onPointerEvent(
+//        pointerEvent: PointerEvent,
+//        pass: androidx.compose.ui.input.pointer.PointerEventPass,
+//        bounds: androidx.compose.ui.geometry.Size
+//    ) {
+//        pointerEvent.changes.forEach { change ->
+//            if (pass == androidx.compose.ui.input.pointer.PointerEventPass.Main && change.changedToUp()) {
+//                val touchPoint = change.position
+//                points.forEach { point ->
+//                    if (distanceBetweenPoints(point, touchPoint) <= radius) {
+//                        onPointTapped(point)
+//                    }
+//                }
+//                change.consumeDownChange()
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//fun Map3(
+//    modifier: Modifier = Modifier,
+//    floorState: State<FloorState>,
+//    configuration: Configuration,
+//    density: Density,
+//    onPointClick: (Offset) -> Unit
+//) {
+//    // Остальной код...
+//    val pointRadius = 15f
+//
+//    if (isDataLoaded) {
+//        val drawContent by remember(floorState.value) {
+//            derivedStateOf {
+//                val pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height)
+//                pathsAndObjects
+//            }
+//        }
+//
+//        Canvas(
+//            modifier = modifier
+//                .aspectRatio(3 / 2f)
+//                .fillMaxSize()
+//                .detectTapGestures(
+//                    PointTapFilter(
+//                        points = drawContent.objects.objects,
+//                        radius = pointRadius,
+//                        onPointTapped = onPointClick
+//                    )
+//                )
+//        ) {
+//            drawIntoCanvas { canvas ->
+//                // ...
+//                for (point in drawContent.objects.objects) {
+//                    canvas.drawCircle(
+//                        center = point,
+//                        radius = pointRadius,
+//                        paint = Paint().apply {
+//                            color = drawContent.objects.color
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    } else {
+//        Text(text = "Загрузка...")
+//    }
+//}
 @Composable
 fun Map3(
     modifier: Modifier = Modifier,

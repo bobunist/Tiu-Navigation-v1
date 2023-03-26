@@ -69,7 +69,6 @@ class MapScreenViewModel@Inject constructor(
         }
     }
 
-
     fun onEvent(event: MapScreenEvent){
         when(event){
             is MapScreenEvent.OnChangeFloor -> {
@@ -131,8 +130,8 @@ class MapScreenViewModel@Inject constructor(
     }
 
     private suspend fun loadFloor(){
-            getPaths()
-            getPoints()
+        _floorState.value.paths = mapUseCases.getPathsOfFloor(floorState.value.currentFloor?.floorId!!)
+        _floorState.value.points = mapUseCases.getPointsOfFloor(floorState.value.currentFloor?.floorId!!)
     }
 
 
@@ -166,19 +165,6 @@ class MapScreenViewModel@Inject constructor(
     }
 
 
-
-
-    private suspend fun getPaths(){
-    _floorState.value.paths = mapUseCases.getPathsOfFloor(floorState.value.currentFloor?.floorId!!)
-}
-
-
-private suspend fun getPoints(){
-        _floorState.value.points = mapUseCases.getPointsOfFloor(floorState.value.currentFloor?.floorId!!)
-
-}
-
-
     private suspend fun getSearchListOfPoints(
         text: String,
         list: SnapshotStateList<Point>
@@ -189,5 +175,3 @@ private suspend fun getPoints(){
         }
     }
 }
-
-
