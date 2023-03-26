@@ -76,31 +76,38 @@ class MapScreenViewModel@Inject constructor(
                 if (floor != null) {
                     _floorState.value = _floorState.value.copy(currentFloor = floor)
                 }
-                viewModelScope.launch { loadFloor() }
-
+                viewModelScope.launch {
+                    withContext(Dispatchers.IO){
+                        loadFloor()
+                    }
+                }
             }
             is MapScreenEvent.EnteredStartPoint -> {
                 _startPointState.text.value = event.text
                 _searchListState.isStartList.value = true
                 if (_startPointState.text.value.isNotBlank()){
                     viewModelScope.launch {
-                        getSearchListOfPoints(_startPointState.text.value,
-                            _searchListState.searchList)
-                        _searchListState.isSearchListVisible.value = true
+                        withContext(Dispatchers.IO){
+                            getSearchListOfPoints(_startPointState.text.value,
+                                _searchListState.searchList)
+                            _searchListState.isSearchListVisible.value = true
+                        }
                     }
                 }
                 else _searchListState.searchList.clear()
-
-
             }
             is MapScreenEvent.EnteredEndPoint -> {
                 _endPointState.text.value = event.text
                 _searchListState.isStartList.value = false
                 if (_endPointState.text.value.isNotBlank()){
                     viewModelScope.launch {
-                        getSearchListOfPoints(_endPointState.text.value,
-                            _searchListState.searchList)
-                        _searchListState.isSearchListVisible.value = true
+                        withContext(Dispatchers.IO) {
+                            getSearchListOfPoints(
+                                _endPointState.text.value,
+                                _searchListState.searchList
+                            )
+                            _searchListState.isSearchListVisible.value = true
+                        }
                     }
                 }
                 else _searchListState.searchList.clear()
@@ -158,7 +165,11 @@ class MapScreenViewModel@Inject constructor(
                 val newFloor = _floorsList[0]
                 if (_floorState.value.currentFloor == null || _floorState.value.currentFloor?.floorId != newFloor.floorId) {
                     _floorState.value = _floorState.value.copy(currentFloor = newFloor)
-                    viewModelScope.launch { loadFloor() }
+                    viewModelScope.launch {
+                        withContext(Dispatchers.IO) {
+                            loadFloor()
+                        }
+                    }
                 }
             }
         }
