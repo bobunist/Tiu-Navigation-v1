@@ -111,71 +111,78 @@ private fun distanceBetweenPoints(a: Offset, b: Offset): Float {
 //        Text(text = "Загрузка...")
 //    }
 //}
-@Composable
-fun Map3(
-    modifier: Modifier = Modifier,
-    floorState: State<FloorState>,
-    configuration: Configuration,
-    density: Density
-) {
-    val width = with(density) { configuration.screenWidthDp.dp.toPx() }
-    val height = width / 3 * 2
-    val (isDataLoaded, setDataLoaded) = remember { mutableStateOf(false) }
 
-    LaunchedEffect(floorState.value.paths) {
 
-        setDataLoaded(false)
-        if (floorState.value.points.isNotEmpty() && floorState.value.paths.isNotEmpty()) {
-            setDataLoaded(true)
-        }
-    }
+//@Composable
+//fun Map3(
+//    modifier: Modifier = Modifier,
+//    floorState: State<FloorState>,
+//    configuration: Configuration,
+//    density: Density
+//) {
+//    val width = with(density) { configuration.screenWidthDp.dp.toPx() }
+//    val height = width / 3 * 2
+//    val (isDataLoaded, setDataLoaded) = remember { mutableStateOf(false) }
+//
+//    LaunchedEffect(floorState.value.paths) {
+//
+//        setDataLoaded(false)
+//        if (floorState.value.points.isNotEmpty() && floorState.value.paths.isNotEmpty()) {
+//            setDataLoaded(true)
+//        }
+//    }
+//
+//    if (isDataLoaded) {
+//        val drawContent by remember(floorState.value) {
+//            derivedStateOf {
+//                val pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height);
+//                { drawScope: DrawScope ->
+//                    drawScope.drawPoints(pathsAndObjects.objects.objects,
+//                        PointMode.Points, pathsAndObjects.objects.color, 30f)
+//
+//                    for (point in pathsAndObjects.objects.objects)
+//                        drawScope.drawCircle(
+//                            pathsAndObjects.objects.color,
+//                            20f,
+//                            point
+//                        )
+//                    for (path in pathsAndObjects.roomsPath.paths)
+//                        drawScope.drawPath(path, pathsAndObjects.roomsPath.color, style = Stroke(10f))
+//
+//                    for (path in pathsAndObjects.elevatorsPath.paths)
+//                        drawScope.drawPath(path, pathsAndObjects.elevatorsPath.color, style = Stroke(10f))
+//
+//                    for (path in pathsAndObjects.outerWallPath.paths)
+//                        drawScope.drawPath(path, pathsAndObjects.outerWallPath.color, style = Stroke(10f))
+//
+//                    for (path in pathsAndObjects.internalWallsPath.paths)
+//                        drawScope.drawPath(path, pathsAndObjects.internalWallsPath.color, style = Stroke(10f))
+//
+//                    for (path in pathsAndObjects.othersPath.paths)
+//                        drawScope.drawPath(path, pathsAndObjects.othersPath.color, style = Stroke(10f))
+//
+//                    for (path in pathsAndObjects.stairsPath.paths)
+//                        drawScope.drawPath(path, pathsAndObjects.stairsPath.color, style = Stroke(10f))
+//                }
+//            }
+//        }
+//
+//        Canvas(
+//            modifier = modifier
+//                .aspectRatio(3 / 2f)
+//                .fillMaxSize()
+//        ) {
+//            drawContent(this)
+//        }
+//    } else {
+//        Text(text = "Загрузка...")
+//    }
+//}
 
-    if (isDataLoaded) {
-        val drawContent by remember(floorState.value) {
-            derivedStateOf {
-                val pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height);
-                { drawScope: DrawScope ->
-                    drawScope.drawPoints(pathsAndObjects.objects.objects,
-                        PointMode.Points, pathsAndObjects.objects.color, 30f)
 
-                    for (point in pathsAndObjects.objects.objects)
-                        drawScope.drawCircle(
-                            pathsAndObjects.objects.color,
-                            20f,
-                            point
-                        )
-                    for (path in pathsAndObjects.roomsPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.roomsPath.color, style = Stroke(10f))
 
-                    for (path in pathsAndObjects.elevatorsPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.elevatorsPath.color, style = Stroke(10f))
 
-                    for (path in pathsAndObjects.outerWallPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.outerWallPath.color, style = Stroke(10f))
 
-                    for (path in pathsAndObjects.internalWallsPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.internalWallsPath.color, style = Stroke(10f))
-
-                    for (path in pathsAndObjects.othersPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.othersPath.color, style = Stroke(10f))
-
-                    for (path in pathsAndObjects.stairsPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.stairsPath.color, style = Stroke(10f))
-                }
-            }
-        }
-
-        Canvas(
-            modifier = modifier
-                .aspectRatio(3 / 2f)
-                .fillMaxSize()
-        ) {
-            drawContent(this)
-        }
-    } else {
-        Text(text = "Загрузка...")
-    }
-}
 
 
 fun initMap(
