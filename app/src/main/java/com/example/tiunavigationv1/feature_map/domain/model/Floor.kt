@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
-// Entity Floor
+
 @Entity(tableName = "floors",
     foreignKeys = [ForeignKey(
         entity = Building::class,
