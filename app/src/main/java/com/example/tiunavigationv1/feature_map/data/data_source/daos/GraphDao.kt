@@ -16,14 +16,12 @@ interface GraphDao {
     @Delete
     suspend fun deleteNode(node: Node)
 
-    @Query("SELECT * FROM nodes")
-    fun getAllNodes(): Flow<List<Node>>
 
     @Query("SELECT * FROM nodes WHERE floor_id = :floorId")
-    fun getNodesByFloor(floorId: Long): Flow<List<Node>>
+    suspend fun getNodesByFloor(floorId: Long): List<Node>
 
 
-    @Query("SELECT * FROM nodes WHERE nodeId = :nodeId")
+    @Query("SELECT * FROM nodes WHERE id = :nodeId")
     fun getNodeById(nodeId: Long): Flow<Node>
 
 
@@ -37,10 +35,10 @@ interface GraphDao {
     @Delete
     suspend fun deleteEdge(edge: Edge)
 
-    @Query("SELECT * FROM edges")
-    fun getAllEdges(): Flow<List<Edge>>
+    @Query("SELECT * FROM edges WHERE floor_id = :floorId")
+    suspend fun getEdgesByFloor(floorId: Long): List<Edge>
 
-    @Query("SELECT * FROM edges WHERE edgeId = :edgeId")
-    fun getEdgeById(edgeId: Long): Flow<Edge>
+    @Query("SELECT * FROM edges WHERE id = :edgeId")
+    suspend fun getEdgeById(edgeId: Long): Edge
 
 }

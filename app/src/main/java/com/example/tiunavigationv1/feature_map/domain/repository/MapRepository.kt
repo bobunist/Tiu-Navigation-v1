@@ -8,11 +8,11 @@ interface MapRepository {
 
     fun getFavoriteList(): Flow<List<Building>>
 
-    suspend fun getBuildings(): Flow<List<Building>>
+    fun getBuildings(): Flow<List<Building>>
 
     fun getFloor(floorId: Long): Flow<Floor>
 
-    suspend fun getFloorsOfBuilding(buildingId: Long): Flow<List<Floor>>
+    fun getFloorsOfBuilding(buildingId: Long): Flow<List<Floor>>
 
     suspend fun getPointsOfFloor(floorId: Long): List<Point>
 
@@ -20,6 +20,10 @@ interface MapRepository {
 
     suspend fun reverseIsFavoriteField(buildingId: Long)
 
-    suspend fun getPointByName(name: String, buildingId: Long): Flow<List<Point>>
+    fun getPointByName(name: String, buildingId: Long): Flow<List<Point>>
+
+    suspend fun getNodesByFloor(floorId: Long): List<Node>
+
+    suspend fun getEdgesByFloor(floorId: Long): List<Edge>
 
 }

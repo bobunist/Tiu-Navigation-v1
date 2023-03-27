@@ -54,7 +54,6 @@ class MapScreenViewModel@Inject constructor(
     private val _searchListState = SearchListState()
     val searchListState: SearchListState = _searchListState
 
-    private var loadFloorJob: Job? = null
 
     init {
         getCurrentBuildingId(savedStateHandle)
@@ -136,6 +135,8 @@ class MapScreenViewModel@Inject constructor(
     private suspend fun loadFloor(){
         _floorState.value.paths = mapUseCases.getPathsOfFloor(floorState.value.currentFloor?.floorId!!)
         _floorState.value.points = mapUseCases.getPointsOfFloor(floorState.value.currentFloor?.floorId!!)
+        _floorState.value.edges = mapUseCases.getEdgesByFloor(floorState.value.currentFloor?.floorId!!)
+        _floorState.value.nodes = mapUseCases.getNodesByFloor(floorState.value.currentFloor?.floorId!!)
     }
 
 

@@ -19,9 +19,13 @@ import androidx.room.PrimaryKey
     indices = [Index(value = ["floor_id"])]
 )
 data class Node(
-    @PrimaryKey(autoGenerate = true) val nodeId: Long = 0L,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long? = null,
+
     val x: Float,
+
     val y: Float,
+
     @ColumnInfo(name = "floor_id")
     val floorId: Long,
 )
