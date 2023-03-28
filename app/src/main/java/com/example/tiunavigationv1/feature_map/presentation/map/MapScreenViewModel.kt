@@ -35,22 +35,6 @@ class MapScreenViewModel@Inject constructor(
     )
     val floorState: StateFlow<FloorState> = _floorState.asStateFlow()
 
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
-
-    private val _startPointState = PointOfRouteState(
-        mutableStateOf(""),
-        "Где вы...",
-        mutableStateOf(null)
-    )
-    val startPointState: PointOfRouteState = _startPointState
-
-    private val _endPointState = PointOfRouteState(
-        mutableStateOf(""),
-        "Куда вам нужно попасть...",
-        mutableStateOf(null)
-    )
-    val endPointState: PointOfRouteState = _endPointState
-
     private val _searchListState = SearchListState()
     val searchListState: SearchListState = _searchListState
 
@@ -79,12 +63,12 @@ class MapScreenViewModel@Inject constructor(
                 }
             }
             is MapScreenEvent.EnteredStartPoint -> {
-                _startPointState.text.value = event.text
+                _floorState.value.startPoint.text.value = event.text
                 _searchListState.isStartList.value = true
-                if (_startPointState.text.value.isNotBlank()){
+                if (_floorState.value.startPoint.text.value.isNotBlank()){
                     viewModelScope.launch {
                         withContext(Dispatchers.IO){
-                            getSearchListOfPoints(_startPointState.text.value,
+                            getSearchListOfPoints(_floorState.value.startPoint.text.value,
                                 _searchListState.searchList)
                             _searchListState.isSearchListVisible.value = true
                         }
@@ -93,13 +77,13 @@ class MapScreenViewModel@Inject constructor(
                 else _searchListState.searchList.clear()
             }
             is MapScreenEvent.EnteredEndPoint -> {
-                _endPointState.text.value = event.text
+                _floorState.value.endPoint.text.value = event.text
                 _searchListState.isStartList.value = false
-                if (_endPointState.text.value.isNotBlank()){
+                if (_floorState.value.endPoint.text.value.isNotBlank()){
                     viewModelScope.launch {
                         withContext(Dispatchers.IO) {
                             getSearchListOfPoints(
-                                _endPointState.text.value,
+                                _floorState.value.endPoint.text.value,
                                 _searchListState.searchList
                             )
                             _searchListState.isSearchListVisible.value = true
@@ -111,12 +95,12 @@ class MapScreenViewModel@Inject constructor(
             }
             is MapScreenEvent.SetPoint -> {
                 if (_searchListState.isStartList.value) {
-                    _startPointState.point.value = event.point.copy()
-                    _startPointState.point.value = event.point.copy()
-                    _startPointState.text.value = event.point.pointName.toString()
+                    _floorState.value.startPoint.point.value = event.point.copy()
+                    _floorState.value.startPoint.point.value = event.point.copy()
+                    _floorState.value.startPoint.text.value = event.point.pointName.toString()
                 } else {
-                    _endPointState.point.value = event.point.copy()
-                    _endPointState.text.value = event.point.pointName.toString()
+                    _floorState.value.endPoint.point.value = event.point.copy()
+                    _floorState.value.endPoint.text.value = event.point.pointName.toString()
                 }
                 _searchListState.searchList.clear()
                 _searchListState.isSearchListVisible.value = false
@@ -125,9 +109,17 @@ class MapScreenViewModel@Inject constructor(
 
             }
             is MapScreenEvent.OnSwapStartEndPoints -> {
-                val copy = _startPointState.point.value?.copy()
-                _startPointState.point.value = _endPointState.point.value
-                _endPointState.point.value = copy
+                val copy = _floorState.value.startPoint.point.value?.copy()
+                _floorState.value.startPoint.point.value = _floorState.value.endPoint.point.value
+                _floorState.value.endPoint.point.value = copy
+            }
+            is MapScreenEvent.OnMapTap -> {
+                if (event.point != null){
+
+                }
+                else {
+
+                }
             }
         }
     }

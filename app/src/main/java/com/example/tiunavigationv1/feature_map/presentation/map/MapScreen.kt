@@ -46,8 +46,8 @@ fun MapScreen(
 
     val floorState = viewModel.floorState.collectAsState()
 
-    val startPointState = viewModel.startPointState
-    val endPointState = viewModel.endPointState
+    val startPointState = viewModel.floorState.value.startPoint
+    val endPointState = viewModel.floorState.value.endPoint
 
     val isSearchListVisible = viewModel.searchListState.isSearchListVisible.value
 

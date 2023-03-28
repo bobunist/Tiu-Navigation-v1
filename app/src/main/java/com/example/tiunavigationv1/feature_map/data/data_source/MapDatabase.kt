@@ -18,6 +18,7 @@ abstract class MapDatabase : RoomDatabase() {
     abstract val floorDao: FloorDao
     abstract val pointDao: PointDao
     abstract val pathDao: PathDao
+    abstract val graphDao: GraphDao
 
 
     companion object {

@@ -1,5 +1,6 @@
 package com.example.tiunavigationv1.feature_map.presentation.map
 
+import com.example.tiunavigationv1.feature_map.domain.model.Path
 import com.example.tiunavigationv1.feature_map.domain.model.Point
 
 sealed class MapScreenEvent{
@@ -12,7 +13,10 @@ sealed class MapScreenEvent{
 
     data class EnteredEndPoint(val text: String): MapScreenEvent()
 
+    data class OnMapTap(val point: Point?, val path: Path?): MapScreenEvent()
+
     object OnSwapStartEndPoints: MapScreenEvent()
 
     object OnStartPath: MapScreenEvent()
+
 }
