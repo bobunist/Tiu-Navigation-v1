@@ -225,65 +225,11 @@ fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
     return path
 }
 
-fun cubicBezierForThreePoints(points: List<Offset>, path: Path, width: Float, height: Float){
-    val secondPoint = Pair(points[0].x * width, ((points[1].y - points[0].y) * 4 / 3 + points[0].y) * height)
-    val thirdPoint = Pair(points[2].x * width, ((points[1].y - points[2].y) * 4 / 3 + points[2].y) * height)
-    val fourthPoint = Pair(points[2].x * width, points[2].y * height)
-    path.cubicTo(secondPoint.first, secondPoint.second, thirdPoint.first, thirdPoint.second, fourthPoint.first, fourthPoint.second)
+fun cubicBezierForThreePoints(points: List<Offset>, path: Path){
+    val secondPoint = Offset(points[0].x, ((points[1].y - points[0].y) * 4 / 3 + points[0].y))
+    val thirdPoint = Offset(points[2].x, ((points[1].y - points[2].y) * 4 / 3 + points[2].y))
+    val fourthPoint = Offset(points[2].x, points[2].y)
+    path.cubicTo(secondPoint.x, secondPoint.y, thirdPoint.x, thirdPoint.y, fourthPoint.x, fourthPoint.y)
 }
 
 fun isPointObject(point: Point): Boolean = point.pointType == PointType.OBJECT
-
-//        coroutineScope.launch {
-//            floorState.collect {State ->
-//                initMap(floorState.value.points, floorState.value.paths, width, height)
-//            }
-//        }
-//
-//            pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height)
-//            if (pathsAndObjects.elevatorsPath.paths.isNotEmpty()) {
-//                for (item in pathsAndObjects.elevatorsPath.paths) {
-//                    drawPath(item, Color.Green, style = Stroke(2.dp.toPx()))
-//                }
-//            }
-//
-//            if (pathsAndObjects.stairsPath.paths.isNotEmpty()) {
-//                for (item in pathsAndObjects.stairsPath.paths) {
-//                    drawPath(item, Color.Green, style = Stroke(2.dp.toPx()))
-//                }
-//            }
-//
-//
-//            if (pathsAndObjects.roomsPath.paths.isNotEmpty()) {
-//                for (item in pathsAndObjects.roomsPath.paths) {
-//                    drawPath(item, Color.Green, style = Stroke(2.dp.toPx()))
-//                }
-//            }
-//
-//            if (pathsAndObjects.outerWallPath.paths.isNotEmpty()) {
-//                for (item in pathsAndObjects.outerWallPath.paths) {
-//                    drawPath(item, Color.Green, style = Stroke(2.dp.toPx()))
-//                }
-//            }
-//
-//            if (pathsAndObjects.internalWallsPath.paths.isNotEmpty()) {
-//                for (item in pathsAndObjects.internalWallsPath.paths) {
-//                    drawPath(item, Color.Green, style = Stroke(2.dp.toPx()))
-//                }
-//            }
-//
-//            if (pathsAndObjects.othersPath.paths.isNotEmpty()) {
-//                for (item in pathsAndObjects.othersPath.paths) {
-//                    drawPath(item, Color.Green, style = Stroke(2.dp.toPx()))
-//                }
-//            }
-//
-//            if (pathsAndObjects.objects.objects.isNotEmpty()) {
-//                Log.d("pointShouldBeDraw", "whyNot?")
-//                drawPoints(
-//                    pathsAndObjects.objects.objects,
-//                    pointMode = PointMode.Points,
-//                    color = Color.Red,
-//                    strokeWidth = 10f
-//                )
-//            }
