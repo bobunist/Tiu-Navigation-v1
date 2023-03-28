@@ -31,12 +31,13 @@ fun Map3(
     modifier: Modifier = Modifier,
     floorState: State<FloorState>,
     configuration: Configuration,
-    density: Density
+    density: Density,
+    onTapEvent: (Point?, PathModel?) -> Unit
 ) {
     val width = with(density) { configuration.screenWidthDp.dp.toPx() }
     val height = width / 3 * 2
     val (isDataLoaded, setDataLoaded) = remember { mutableStateOf(false) }
-
+    var pathsAndObjects =  PathsAndObjectsHolderForDrawing()
     LaunchedEffect(floorState.value.paths) {
 
         setDataLoaded(false)
@@ -48,7 +49,7 @@ fun Map3(
     if (isDataLoaded) {
         val drawContent by remember(floorState.value) {
             derivedStateOf {
-                val pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height);
+                pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height);
                 { drawScope: DrawScope ->
                     drawScope.drawPoints(pathsAndObjects.objects.objects,
                         PointMode.Points, pathsAndObjects.objects.color, 30f)
@@ -85,9 +86,25 @@ fun Map3(
                 .aspectRatio(3 / 2f)
                 .fillMaxSize()
                 .pointerInput(Unit){
-                    detectTapGestures { offset: Offset ->
+                    detectTapGestures { tap: Offset ->
+                        for (circleCenter in pathsAndObjects.objects.objects){
+                            if (isPointInsideCircle(tap, circleCenter, 25f)){
+                                val pointModel = pathsAndObjects.pointsMap[circleCenter]
+                                onTapEvent(pointModel, null)
+                                return@detectTapGestures
+                            }
+                        }
+                        for (path in pathsAndObjects.roomsPath.paths){
+                            if (isPointInsidePolygon())
+                            val pathModel = pathsAndObjects.pathsMap
 
+                        }
+                        for (path in pathsAndObjects.elevatorsPath.paths){
 
+                        }
+                        for (path in pathsAndObjects.stairsPath.paths){
+
+                        }
                     }
                 }
         ) {
@@ -98,12 +115,12 @@ fun Map3(
     }
 }
 
-fun isPointInsideCircle(point: Offset, circleCenter: Offset, radius: Float): Boolean {
+private fun isPointInsideCircle(point: Offset, circleCenter: Offset, radius: Float): Boolean {
     val distance = sqrt((point.x - circleCenter.x).pow(2) + (point.y - circleCenter.y).pow(2))
     return distance <= radius
 }
 
-fun isPointInsidePolygon(polygonPoints: List<Offset>, point: Offset): Boolean {
+private fun isPointInsidePolygon(polygonPoints: List<Offset>, point: Offset): Boolean {
     var crossings = 0
 
     for (i in polygonPoints.indices) {
@@ -153,15 +170,17 @@ fun initMap(
     height: Float
 ): PathsAndObjectsHolderForDrawing{
     val paths = PathsAndObjectsHolderForDrawing()
-    val mutablePointsList = pointsList.toMutableSet()
+    val mutablePointsList = pointsList.toMutableList()
+    val pathsMap: MutableMap<Path, Pair<PathModel, List<>>> = mutableMapOf()
+    val pointsMap: MutableMap<Offset, Point> = mutableMapOf()
 
     for (pathModel in pathsList) {
         val pointsForPath = mutableListOf<Point>()
-
         mutablePointsList.forEach { point ->
-            if (isPointObject(point)) {
-                paths.objects.objects.add(Offset(point.x * width, point.y * height))
-
+            if (isPointObject(point) && !mutablePointsList.contains(point)) {
+                val offsetPoint = Offset(point.x * width, point.y * height)
+                paths.objects.objects.add(offsetPoint)
+                pointsMap[offsetPoint] = point
             }
             else if (pathModel.pathId == point.pathId){
                 pointsForPath.add(point)
@@ -169,29 +188,34 @@ fun initMap(
         }
         pointsForPath.sortBy { it.inPathId }
         val path = makePathFromPoints(pointsForPath, width, height)
+        pathsMap[path] = pathModel
         when (pathModel.pathType){
             PathType.ELEVATOR -> {paths.elevatorsPath.paths.add(path)}
             PathType.STAIRS -> {paths.stairsPath.paths.add(path)}
             PathType.ROOM -> {paths.roomsPath.paths.add(path)
-
-
             }
             PathType.OUTER_WALL -> {paths.outerWallPath.paths.add(path)}
             PathType.INTERNAL_WALL -> {paths.internalWallsPath.paths.add(path)}
             PathType.OTHER -> {paths.othersPath.paths.add(path)}
         }
     }
+    paths.pointsMap.putAll(pointsMap)
+    paths.pathsMap.putAll(pathsMap)
     return paths
 }
 
+fun pointToOffset(point: Point, width: Float, height: Float): Offset{
+    return Offset(point.x * width, point.y * height)
+}
 
 fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
     val path = Path()
     for ((index, point) in points.withIndex()){
-        if (index == 0) path.moveTo(point.x * width, point.y * height)
+        val pointOffset = pointToOffset(point, width, height)
+        if (index == 0) path.moveTo(pointOffset.x, pointOffset.y)
         else {
             when (point.pointParameter) {
-                PointParameter.LINE -> path.lineTo(point.x * width, point.y * height)
+                PointParameter.LINE -> path.lineTo(pointOffset.x, pointOffset.y)
                 PointParameter.BEZIER3 -> cubicBezierForThreePoints(listOf(points[index - 2], points[index - 1], points[index]), path, width, height)
                 else -> Unit
             }
@@ -201,7 +225,7 @@ fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
     return path
 }
 
-fun cubicBezierForThreePoints(points: List<Point>, path: Path, width: Float, height: Float){
+fun cubicBezierForThreePoints(points: List<Offset>, path: Path, width: Float, height: Float){
     val secondPoint = Pair(points[0].x * width, ((points[1].y - points[0].y) * 4 / 3 + points[0].y) * height)
     val thirdPoint = Pair(points[2].x * width, ((points[1].y - points[2].y) * 4 / 3 + points[2].y) * height)
     val fourthPoint = Pair(points[2].x * width, points[2].y * height)
