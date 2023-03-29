@@ -13,7 +13,7 @@ sealed class MapScreenEvent{
 
     data class EnteredEndPoint(val text: String): MapScreenEvent()
 
-    data class OnMapTap(val point: Point?, val path: Path?): MapScreenEvent()
+    data class OnMapTap(val obj: Any): MapScreenEvent()
 
     object OnSwapStartEndPoints: MapScreenEvent()
 

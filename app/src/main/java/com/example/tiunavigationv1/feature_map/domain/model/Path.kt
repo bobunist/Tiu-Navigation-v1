@@ -1,18 +1,29 @@
 package com.example.tiunavigationv1.feature_map.domain.model
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.example.tiunavigationv1.feature_map.domain.util.PathType
 
-// Entity Room
-@Entity(tableName = "paths",
-    foreignKeys = [ForeignKey(
-        entity = Floor::class,
-        parentColumns = ["id"],
-        childColumns = ["floor_id"],
-        onDelete = ForeignKey.CASCADE)])
+@Entity(
+    tableName = "paths",
+    foreignKeys = [
+        ForeignKey(
+            entity = Floor::class,
+            parentColumns = ["id"],
+            childColumns = ["floor_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Node::class,
+            parentColumns = ["id"],
+            childColumns = ["node_id"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["floor_id"]),
+        Index(value = ["node_id"])
+    ]
+)
 data class Path(
 
     @PrimaryKey(autoGenerate = true)
@@ -26,7 +37,11 @@ data class Path(
     val pathType: PathType,
 
     @ColumnInfo(name = "floor_id", index = true)
-    val floorId: Long
+    val floorId: Long,
+
+    @ColumnInfo(name = "node_id")
+    val nodeId: Long? = null
 )
+
 
 //INSERT INTO paths (id, path_name, path_type, floor_id) VALUES (null, "some path", "ROOM", 1);

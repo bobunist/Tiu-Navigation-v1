@@ -32,7 +32,7 @@ fun Map3(
     floorState: State<FloorState>,
     configuration: Configuration,
     density: Density,
-    onTapEvent: (Point?, PathModel?) -> Unit
+    onTapEvent: (Any) -> Unit
 ) {
     val width = with(density) { configuration.screenWidthDp.dp.toPx() }
     val height = width / 3 * 2
@@ -85,25 +85,38 @@ fun Map3(
             modifier = modifier
                 .aspectRatio(3 / 2f)
                 .fillMaxSize()
-                .pointerInput(Unit){
+                .pointerInput(Unit) {
                     detectTapGestures { tap: Offset ->
-                        for (circleCenter in pathsAndObjects.objects.objects){
-                            if (isPointInsideCircle(tap, circleCenter, 25f)){
+                        for (circleCenter in pathsAndObjects.objects.objects) {
+                            if (isPointInsideCircle(tap, circleCenter, 25f)) {
                                 val pointModel = pathsAndObjects.pointsMap[circleCenter]
-                                onTapEvent(pointModel, null)
+                                pointModel?.let { onTapEvent(it) }
                                 return@detectTapGestures
                             }
                         }
-                        for (path in pathsAndObjects.roomsPath.paths){
-                            if (isPointInsidePolygon())
-                            val pathModel = pathsAndObjects.pathsMap
-
+                        for (path in pathsAndObjects.roomsPath.paths) {
+                            val polygonPoints = pathsAndObjects.pathsMap[path]?.second
+                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
+                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
+                                onTapEvent(pathModel)
+                                return@detectTapGestures
+                            }
                         }
-                        for (path in pathsAndObjects.elevatorsPath.paths){
-
+                        for (path in pathsAndObjects.elevatorsPath.paths) {
+                            val polygonPoints = pathsAndObjects.pathsMap[path]?.second
+                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
+                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
+                                onTapEvent(pathModel)
+                                return@detectTapGestures
+                            }
                         }
-                        for (path in pathsAndObjects.stairsPath.paths){
-
+                        for (path in pathsAndObjects.stairsPath.paths) {
+                            val polygonPoints = pathsAndObjects.pathsMap[path]?.second
+                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
+                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
+                                onTapEvent(pathModel)
+                                return@detectTapGestures
+                            }
                         }
                     }
                 }
@@ -171,7 +184,7 @@ fun initMap(
 ): PathsAndObjectsHolderForDrawing{
     val paths = PathsAndObjectsHolderForDrawing()
     val mutablePointsList = pointsList.toMutableList()
-    val pathsMap: MutableMap<Path, Pair<PathModel, List<>>> = mutableMapOf()
+    val pathsMap: MutableMap<Path, Pair<PathModel, List<Offset>>> = mutableMapOf()
     val pointsMap: MutableMap<Offset, Point> = mutableMapOf()
 
     for (pathModel in pathsList) {
@@ -188,7 +201,7 @@ fun initMap(
         }
         pointsForPath.sortBy { it.inPathId }
         val path = makePathFromPoints(pointsForPath, width, height)
-        pathsMap[path] = pathModel
+        pathsMap[path] = Pair(pathModel, pointsForPath.map { point -> pointToOffset(point, height, width) })
         when (pathModel.pathType){
             PathType.ELEVATOR -> {paths.elevatorsPath.paths.add(path)}
             PathType.STAIRS -> {paths.stairsPath.paths.add(path)}
@@ -216,7 +229,12 @@ fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
         else {
             when (point.pointParameter) {
                 PointParameter.LINE -> path.lineTo(pointOffset.x, pointOffset.y)
-                PointParameter.BEZIER3 -> cubicBezierForThreePoints(listOf(points[index - 2], points[index - 1], points[index]), path, width, height)
+                PointParameter.BEZIER3 -> {
+                    val point1 = pointToOffset(points[index - 2], width, height)
+                    val point2 = pointToOffset(points[index - 1], width, height)
+                    val point3 = pointToOffset(points[index], width, height)
+                    cubicBezierForThreePoints(listOf(point1, point2, point3), path)
+                }
                 else -> Unit
             }
         }

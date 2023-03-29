@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import com.example.tiunavigationv1.feature_map.domain.model.Point
+import com.example.tiunavigationv1.feature_map.domain.model.Path as PathModel
 
 data class PathsAndObjectsHolderForDrawing(
     val elevatorsPath: PathsForDrawingState = PathsForDrawingState(color = Color.Blue),
@@ -15,6 +16,6 @@ data class PathsAndObjectsHolderForDrawing(
 
     val objects: ObjectsForDrawingState = ObjectsForDrawingState(color = Color.Red),
 
-    val pathsMap: MutableMap<Path, com.example.tiunavigationv1.feature_map.domain.model.Path> = mutableMapOf(),
+    val pathsMap: MutableMap<Path, Pair<PathModel, List<Offset>>> = mutableMapOf(),
     val pointsMap: MutableMap<Offset, Point> = mutableMapOf()
 )

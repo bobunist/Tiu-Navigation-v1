@@ -1,12 +1,12 @@
 package com.example.tiunavigationv1.feature_map.presentation.map
 
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tiunavigationv1.feature_map.domain.model.Floor
+import com.example.tiunavigationv1.feature_map.domain.model.Path
 import com.example.tiunavigationv1.feature_map.domain.model.Point
 import com.example.tiunavigationv1.feature_map.domain.use_case.MapUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -114,11 +114,33 @@ class MapScreenViewModel@Inject constructor(
                 _floorState.value.endPoint.point.value = copy
             }
             is MapScreenEvent.OnMapTap -> {
-                if (event.point != null){
+                when (event.obj) {
+                    is Point -> {
+                        val currentStartPoint = _floorState.value.startPoint.point.value
+                        val currentEndPoint = _floorState.value.endPoint.point.value
+                        val incomingValue = event.obj
 
-                }
-                else {
+                        when {
+                            currentStartPoint == null && currentEndPoint == null -> {
+                                _floorState.value.startPoint.point.value = incomingValue
+                            }
+                            currentStartPoint == incomingValue -> {
+                                _floorState.value.startPoint.point.value = null
+                            }
+                            currentEndPoint == incomingValue -> {
+                                _floorState.value.endPoint.point.value = null
+                            }
+                            currentStartPoint == null && currentEndPoint != null -> {
+                                _floorState.value.startPoint.point.value = incomingValue
+                            }
+                            currentStartPoint != null && currentEndPoint == null -> {
+                                _floorState.value.endPoint.point.value = incomingValue
+                            }
+                        }
+                    }
+                    is Path -> {
 
+                    }
                 }
             }
         }
