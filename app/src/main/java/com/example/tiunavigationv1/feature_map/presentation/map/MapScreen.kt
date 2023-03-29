@@ -109,8 +109,8 @@ fun MapScreen(
                         .heightIn(min = 30.dp),
                     onValueChange = {viewModel.onEvent(MapScreenEvent.EnteredEndPoint(it))})
                 if (isSearchListVisible) {
-                    SearchList(searchList, onItemClick = { point ->
-                        viewModel.onEvent(MapScreenEvent.SetPoint(point))
+                    SearchList(searchList, onItemClick = { mapElement ->
+                        viewModel.onEvent(MapScreenEvent.SetPoint(mapElement))
                         keyboardController?.hide()
                     })
                 }

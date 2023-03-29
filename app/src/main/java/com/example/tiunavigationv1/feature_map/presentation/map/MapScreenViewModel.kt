@@ -1,7 +1,6 @@
 package com.example.tiunavigationv1.feature_map.presentation.map
 
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -70,13 +69,12 @@ class MapScreenViewModel@Inject constructor(
                 if (_floorState.value.startObject.text.value.isNotBlank()){
                     viewModelScope.launch {
                         withContext(Dispatchers.IO){
-                            getSearchListOfPoints(_floorState.value.startObject.text.value,
-                                _searchListState.searchList)
+                            getSearchListOfPoints(_floorState.value.startObject.text.value)
                             _searchListState.isSearchListVisible.value = true
                         }
                     }
                 }
-                else _searchListState.searchList.clear()
+                else _searchListState.searchList = emptyList()
             }
             is MapScreenEvent.EnteredEndPoint -> {
                 _floorState.value.endObject.text.value = event.text
@@ -84,15 +82,12 @@ class MapScreenViewModel@Inject constructor(
                 if (_floorState.value.endObject.text.value.isNotBlank()){
                     viewModelScope.launch {
                         withContext(Dispatchers.IO) {
-                            getSearchListOfPoints(
-                                _floorState.value.endObject.text.value,
-                                _searchListState.searchList
-                            )
+                            getSearchListOfPoints(_floorState.value.endObject.text.value)
                             _searchListState.isSearchListVisible.value = true
                         }
                     }
                 }
-                else _searchListState.searchList.clear()
+                else _searchListState.searchList = emptyList()
             }
 
             is MapScreenEvent.SetPoint -> {
@@ -103,7 +98,7 @@ class MapScreenViewModel@Inject constructor(
                     _floorState.value.endObject.obj.value = event.obj
                     _floorState.value.endObject.text.value = event.obj.getName()
                 }
-                _searchListState.searchList.clear()
+                _searchListState.searchList = emptyList()
                 _searchListState.isSearchListVisible.value = false
                 updateWayIfPossible()
             }
@@ -297,10 +292,9 @@ class MapScreenViewModel@Inject constructor(
 
 
     private suspend fun getSearchListOfPoints(
-        text: String,
-        list: SnapshotStateList<MapElement>
+        text: String
     ) {
-        list.clear()
+        _searchListState.searchList = emptyList()
         val tempList = mutableListOf<MapElement>()
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -319,7 +313,7 @@ class MapScreenViewModel@Inject constructor(
             }
 
             withContext(Dispatchers.Main) {
-                list.addAll(sortedList)
+                _searchListState.searchList = sortedList.toList()
             }
         }
     }

@@ -15,8 +15,7 @@ import androidx.room.PrimaryKey
             childColumns = ["floor_id"],
             onDelete = ForeignKey.CASCADE
         )
-    ],
-    indices = [Index(value = ["floor_id"])]
+    ]
 )
 data class Node(
     @PrimaryKey(autoGenerate = true)

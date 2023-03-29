@@ -24,11 +24,6 @@ import com.example.tiunavigationv1.feature_map.domain.util.PathType
             childColumns = ["node_id"],
             onDelete = ForeignKey.CASCADE
         )
-    ],
-    indices = [
-        Index(value = ["building_id"]),
-        Index(value = ["floor_id"]),
-        Index(value = ["node_id"])
     ]
 )
 data class Path(

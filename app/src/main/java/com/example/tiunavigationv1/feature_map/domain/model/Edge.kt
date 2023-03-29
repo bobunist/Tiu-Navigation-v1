@@ -29,9 +29,6 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [
-        Index(value = ["floor_id"])
-    ]
 )
 data class Edge(
     @PrimaryKey(autoGenerate = true)
