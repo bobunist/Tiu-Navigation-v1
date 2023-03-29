@@ -42,7 +42,7 @@ object AppModule {
             getPointsOfFloor = GetPointsOfFloor(repository),
             getPathsOfFloor = GetPathsOfFloor(repository),
             getFloor = GetFloor(repository),
-            getPointByName = GetPointByName(repository),
+            getPointsByName = GetPointsByName(repository),
             getEdgesByFloor = GetEdgesByFloor(repository),
             getNodesByFloor = GetNodesByFloor(repository)
         )

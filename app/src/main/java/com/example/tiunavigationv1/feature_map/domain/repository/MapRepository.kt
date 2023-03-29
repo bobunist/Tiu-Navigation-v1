@@ -1,5 +1,6 @@
 package com.example.tiunavigationv1.feature_map.domain.repository
 
+import androidx.room.Query
 import com.example.tiunavigationv1.feature_map.domain.model.*
 import kotlinx.coroutines.flow.Flow
 
@@ -25,5 +26,7 @@ interface MapRepository {
     suspend fun getNodesByFloor(floorId: Long): List<Node>
 
     suspend fun getEdgesByFloor(floorId: Long): List<Edge>
+
+    fun getPathsByName(name: String, buildingId: Long): Flow<List<Path>>
 
 }

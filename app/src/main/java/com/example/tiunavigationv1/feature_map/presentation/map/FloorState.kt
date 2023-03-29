@@ -17,10 +17,10 @@ data class FloorState(
         mutableStateOf(null),
     ),
 
-    var paths: List<Path> = listOf(),
-    var points: List<Point> = listOf(),
-    var nodes: List<Node> = listOf(),
-    var edges: List<Edge> = listOf(),
+    var paths: List<Path> = emptyList(),
+    var points: List<Point> = emptyList(),
+    var nodes: List<Node> = emptyList(),
+    var edges: List<Edge> = emptyList(),
 
-    var way: List<Node> = listOf()
+    var way: List<Node> = emptyList()
 )

@@ -7,6 +7,12 @@ import com.example.tiunavigationv1.feature_map.domain.util.PathType
     tableName = "paths",
     foreignKeys = [
         ForeignKey(
+            entity = Building::class,
+            parentColumns = ["id"],
+            childColumns = ["building_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
             entity = Floor::class,
             parentColumns = ["id"],
             childColumns = ["floor_id"],
@@ -20,6 +26,7 @@ import com.example.tiunavigationv1.feature_map.domain.util.PathType
         )
     ],
     indices = [
+        Index(value = ["building_id"]),
         Index(value = ["floor_id"]),
         Index(value = ["node_id"])
     ]
@@ -31,10 +38,13 @@ data class Path(
     val pathId: Long? = null,
 
     @ColumnInfo(name = "path_name")
-    val pathName: String,
+    val pathName: String? = null,
 
     @ColumnInfo(name = "path_type")
     val pathType: PathType,
+
+    @ColumnInfo(name = "building_id")
+    val buildingId: Long,
 
     @ColumnInfo(name = "floor_id", index = true)
     val floorId: Long,

@@ -58,5 +58,9 @@ class MapRepositoryImpl(
         return graphDao.getEdgesByFloor(floorId)
     }
 
+    override fun getPathsByName(name: String, buildingId: Long): Flow<List<Path>> {
+        return pathDao.getByName(name, buildingId)
+    }
+
 
 }

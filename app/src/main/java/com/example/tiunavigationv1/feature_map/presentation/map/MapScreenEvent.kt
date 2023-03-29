@@ -7,7 +7,7 @@ sealed class MapScreenEvent{
 
     data class OnChangeFloor(val floorId: Long): MapScreenEvent()
 
-    data class SetPoint(val point: Point): MapScreenEvent()
+    data class SetPoint(val obj: MapElement): MapScreenEvent()
 
     data class EnteredStartPoint(val text: String): MapScreenEvent()
 

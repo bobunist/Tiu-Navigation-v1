@@ -5,6 +5,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tiunavigationv1.feature_map.domain.model.Edge
 import com.example.tiunavigationv1.feature_map.domain.model.Floor
 import com.example.tiunavigationv1.feature_map.domain.model.Node
 import com.example.tiunavigationv1.feature_map.domain.model.Point
@@ -14,6 +15,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.*
 import javax.inject.Inject
+import kotlin.math.sqrt
 
 @HiltViewModel
 class MapScreenViewModel@Inject constructor(
@@ -91,19 +93,21 @@ class MapScreenViewModel@Inject constructor(
                     }
                 }
                 else _searchListState.searchList.clear()
-
             }
+
             is MapScreenEvent.SetPoint -> {
                 if (_searchListState.isStartList.value) {
-                    _floorState.value.startObject.obj.value = MapElement.PointElement(event.point)
-                    _floorState.value.startObject.text.value = event.point.pointName.toString()
+                    _floorState.value.startObject.obj.value = event.obj
+                    _floorState.value.startObject.text.value = event.obj.getName()
                 } else {
-                    _floorState.value.endObject.obj.value = MapElement.PointElement(event.point)
-                    _floorState.value.endObject.text.value = event.point.pointName.toString()
+                    _floorState.value.endObject.obj.value = event.obj
+                    _floorState.value.endObject.text.value = event.obj.getName()
                 }
                 _searchListState.searchList.clear()
                 _searchListState.isSearchListVisible.value = false
+                updateWayIfPossible()
             }
+
             is MapScreenEvent.OnSwapStartEndPoints -> {
                 val startPointValue = _floorState.value.startObject.obj.value
                 val endPointValue = _floorState.value.endObject.obj.value
@@ -158,19 +162,50 @@ class MapScreenViewModel@Inject constructor(
                         _floorState.value.endObject.obj.value = incomingValue
                     }
                 }
+                updateWayIfPossible()
             }
         }
     }
 
-    fun findNearestNode(nodes: List<Node>, point: Point): Node? {
+    private fun updateWayIfPossible() {
+        if (_floorState.value.startObject.obj.value != null && _floorState.value.endObject.obj.value != null) {
+            updateWay(_floorState.value)
+        } else {
+            _floorState.value.way = emptyList()
+        }
+    }
+
+    private fun updateWay(floorState: FloorState) {
+        val startMapElement = floorState.startObject.obj.value
+        val endMapElement = floorState.endObject.obj.value
+
+        if (startMapElement != null && endMapElement != null) {
+            val startNode = findNearestNodeForMapElement(floorState.nodes, startMapElement, floorState.points)
+            val endNode = findNearestNodeForMapElement(floorState.nodes, endMapElement, floorState.points)
+
+            if (startNode != null && endNode != null) {
+                val way = dijkstraShortestPath(floorState.nodes, floorState.edges, startNode, endNode)
+                floorState.way = way
+            }
+        }
+    }
+
+
+    private fun findNearestNodeForMapElement(nodes: List<Node>, mapElement: MapElement, points: List<Point>): Node? {
+        val (mapElementX, mapElementY) = when (mapElement) {
+            is MapElement.PointElement -> mapElement.getCoordinates()
+            is MapElement.PathElement -> mapElement.getCoordinates(points)
+        }
+
         return nodes.minByOrNull { node ->
-            val dx = node.x - point.x
-            val dy = node.y - point.y
+            val dx = node.x - mapElementX!!
+            val dy = node.y - mapElementY!!
             dx * dx + dy * dy
         }
     }
 
-    fun dijkstraShortestPath(nodes: List<Node>, edges: List<Edge>, startNode: Node, endNode: Node): List<Node> {
+
+    private fun dijkstraShortestPath(nodes: List<Node>, edges: List<Edge>, startNode: Node, endNode: Node): List<Node> {
         val unvisitedNodes = nodes.toMutableSet()
         val distances = nodes.associateBy({ it.id!! }, { Float.POSITIVE_INFINITY }).toMutableMap()
         val previousNodes = mutableMapOf<Long, Node?>()
@@ -178,7 +213,7 @@ class MapScreenViewModel@Inject constructor(
         distances[startNode.id!!] = 0f
 
         while (unvisitedNodes.isNotEmpty()) {
-            val currentNode = unvisitedNodes.minByOrNull { distances[it.id!!] } ?: break
+            val currentNode = unvisitedNodes.minByOrNull { distances[it.id!!]!! } ?: break
             unvisitedNodes.remove(currentNode)
 
             if (currentNode == endNode) {
@@ -191,8 +226,8 @@ class MapScreenViewModel@Inject constructor(
                 val tentativeDistance = distances[currentNode.id!!]!! + distanceBetweenNodes(currentNode, neighborNode)
 
                 if (tentativeDistance < distances[neighborNode.id!!]!!) {
-                    distances[neighborNode.id!!] = tentativeDistance
-                    previousNodes[neighborNode.id!!] = currentNode
+                    distances[neighborNode.id] = tentativeDistance
+                    previousNodes[neighborNode.id] = currentNode
                 }
             }
         }
@@ -200,21 +235,25 @@ class MapScreenViewModel@Inject constructor(
         return buildPath(endNode, previousNodes)
     }
 
-    fun distanceBetweenNodes(node1: Node, node2: Node): Float {
+    private fun distanceBetweenNodes(node1: Node, node2: Node): Float {
         val dx = node1.x - node2.x
         val dy = node1.y - node2.y
         return sqrt(dx * dx + dy * dy)
     }
 
-    fun buildPath(endNode: Node, previousNodes: Map<Long, Node?>): List<Node> {
+    private fun buildPath(endNode: Node, previousNodes: Map<Long, Node?>): List<Node> {
         val path = mutableListOf<Node>()
         var currentNode: Node? = endNode
 
         while (currentNode != null) {
             path.add(currentNode)
+            currentNode = previousNodes[currentNode.id!!]
+        }
 
+        return path.reversed()
+    }
 
-            private suspend fun loadFloor(){
+    private suspend fun loadFloor(){
         _floorState.value.paths = mapUseCases.getPathsOfFloor(floorState.value.currentFloor?.floorId!!)
         _floorState.value.points = mapUseCases.getPointsOfFloor(floorState.value.currentFloor?.floorId!!)
         _floorState.value.edges = mapUseCases.getEdgesByFloor(floorState.value.currentFloor?.floorId!!)
@@ -259,11 +298,31 @@ class MapScreenViewModel@Inject constructor(
 
     private suspend fun getSearchListOfPoints(
         text: String,
-        list: SnapshotStateList<Point>
-    ){
+        list: SnapshotStateList<MapElement>
+    ) {
         list.clear()
-        mapUseCases.getPointByName(text, currentBuildingId!!).take(1).collect { variableList ->
-            list.addAll(variableList)
+        val tempList = mutableListOf<MapElement>()
+
+        viewModelScope.launch(Dispatchers.IO) {
+            mapUseCases.getPointsByName(text, currentBuildingId!!).take(1).collect { variableList ->
+                tempList.addAll(variableList.map { point -> MapElement.PointElement(point) })
+            }
+            mapUseCases.getPathsByName(text, currentBuildingId!!).take(1).collect { variableList ->
+                tempList.addAll(variableList.map { path -> MapElement.PathElement(path) })
+            }
+
+            val sortedList = tempList.sortedBy { mapElement ->
+                when (mapElement) {
+                    is MapElement.PointElement -> mapElement.point.pointName
+                    is MapElement.PathElement -> mapElement.path.pathName
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                list.addAll(sortedList)
+            }
         }
     }
+
+
 }
