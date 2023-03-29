@@ -21,4 +21,6 @@ data class FloorState(
     var points: List<Point> = listOf(),
     var nodes: List<Node> = listOf(),
     var edges: List<Edge> = listOf(),
+
+    var way: List<Node> = listOf()
 )

@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tiunavigationv1.feature_map.domain.model.Floor
+import com.example.tiunavigationv1.feature_map.domain.model.Node
 import com.example.tiunavigationv1.feature_map.domain.model.Point
 import com.example.tiunavigationv1.feature_map.domain.use_case.MapUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -161,11 +162,59 @@ class MapScreenViewModel@Inject constructor(
         }
     }
 
-    private fun buildWay(){
-        
+    fun findNearestNode(nodes: List<Node>, point: Point): Node? {
+        return nodes.minByOrNull { node ->
+            val dx = node.x - point.x
+            val dy = node.y - point.y
+            dx * dx + dy * dy
+        }
     }
 
-    private suspend fun loadFloor(){
+    fun dijkstraShortestPath(nodes: List<Node>, edges: List<Edge>, startNode: Node, endNode: Node): List<Node> {
+        val unvisitedNodes = nodes.toMutableSet()
+        val distances = nodes.associateBy({ it.id!! }, { Float.POSITIVE_INFINITY }).toMutableMap()
+        val previousNodes = mutableMapOf<Long, Node?>()
+
+        distances[startNode.id!!] = 0f
+
+        while (unvisitedNodes.isNotEmpty()) {
+            val currentNode = unvisitedNodes.minByOrNull { distances[it.id!!] } ?: break
+            unvisitedNodes.remove(currentNode)
+
+            if (currentNode == endNode) {
+                break
+            }
+
+            val currentEdges = edges.filter { it.fromNodeId == currentNode.id }
+            for (edge in currentEdges) {
+                val neighborNode = nodes.find { it.id == edge.toNodeId } ?: continue
+                val tentativeDistance = distances[currentNode.id!!]!! + distanceBetweenNodes(currentNode, neighborNode)
+
+                if (tentativeDistance < distances[neighborNode.id!!]!!) {
+                    distances[neighborNode.id!!] = tentativeDistance
+                    previousNodes[neighborNode.id!!] = currentNode
+                }
+            }
+        }
+
+        return buildPath(endNode, previousNodes)
+    }
+
+    fun distanceBetweenNodes(node1: Node, node2: Node): Float {
+        val dx = node1.x - node2.x
+        val dy = node1.y - node2.y
+        return sqrt(dx * dx + dy * dy)
+    }
+
+    fun buildPath(endNode: Node, previousNodes: Map<Long, Node?>): List<Node> {
+        val path = mutableListOf<Node>()
+        var currentNode: Node? = endNode
+
+        while (currentNode != null) {
+            path.add(currentNode)
+
+
+            private suspend fun loadFloor(){
         _floorState.value.paths = mapUseCases.getPathsOfFloor(floorState.value.currentFloor?.floorId!!)
         _floorState.value.points = mapUseCases.getPointsOfFloor(floorState.value.currentFloor?.floorId!!)
         _floorState.value.edges = mapUseCases.getEdgesByFloor(floorState.value.currentFloor?.floorId!!)
