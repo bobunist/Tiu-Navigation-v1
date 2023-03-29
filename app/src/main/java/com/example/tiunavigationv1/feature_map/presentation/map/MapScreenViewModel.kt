@@ -63,12 +63,12 @@ class MapScreenViewModel@Inject constructor(
                 }
             }
             is MapScreenEvent.EnteredStartPoint -> {
-                _floorState.value.startPoint.text.value = event.text
+                _floorState.value.startObject.text.value = event.text
                 _searchListState.isStartList.value = true
-                if (_floorState.value.startPoint.text.value.isNotBlank()){
+                if (_floorState.value.startObject.text.value.isNotBlank()){
                     viewModelScope.launch {
                         withContext(Dispatchers.IO){
-                            getSearchListOfPoints(_floorState.value.startPoint.text.value,
+                            getSearchListOfPoints(_floorState.value.startObject.text.value,
                                 _searchListState.searchList)
                             _searchListState.isSearchListVisible.value = true
                         }
@@ -77,13 +77,13 @@ class MapScreenViewModel@Inject constructor(
                 else _searchListState.searchList.clear()
             }
             is MapScreenEvent.EnteredEndPoint -> {
-                _floorState.value.endPoint.text.value = event.text
+                _floorState.value.endObject.text.value = event.text
                 _searchListState.isStartList.value = false
-                if (_floorState.value.endPoint.text.value.isNotBlank()){
+                if (_floorState.value.endObject.text.value.isNotBlank()){
                     viewModelScope.launch {
                         withContext(Dispatchers.IO) {
                             getSearchListOfPoints(
-                                _floorState.value.endPoint.text.value,
+                                _floorState.value.endObject.text.value,
                                 _searchListState.searchList
                             )
                             _searchListState.isSearchListVisible.value = true
@@ -95,12 +95,12 @@ class MapScreenViewModel@Inject constructor(
             }
             is MapScreenEvent.SetPoint -> {
                 if (_searchListState.isStartList.value) {
-                    _floorState.value.startPoint.point.value = event.point.copy()
-                    _floorState.value.startPoint.point.value = event.point.copy()
-                    _floorState.value.startPoint.text.value = event.point.pointName.toString()
+                    _floorState.value.startObject.obj.value = event.point.copy()
+                    _floorState.value.startObject.obj.value = event.point.copy()
+                    _floorState.value.startObject.text.value = event.point.pointName.toString()
                 } else {
-                    _floorState.value.endPoint.point.value = event.point.copy()
-                    _floorState.value.endPoint.text.value = event.point.pointName.toString()
+                    _floorState.value.endObject.obj.value = event.point.copy()
+                    _floorState.value.endObject.text.value = event.point.pointName.toString()
                 }
                 _searchListState.searchList.clear()
                 _searchListState.isSearchListVisible.value = false
@@ -109,37 +109,57 @@ class MapScreenViewModel@Inject constructor(
 
             }
             is MapScreenEvent.OnSwapStartEndPoints -> {
-                val copy = _floorState.value.startPoint.point.value?.copy()
-                _floorState.value.startPoint.point.value = _floorState.value.endPoint.point.value
-                _floorState.value.endPoint.point.value = copy
-            }
-            is MapScreenEvent.OnMapTap -> {
-                when (event.obj) {
-                    is Point -> {
-                        val currentStartPoint = _floorState.value.startPoint.point.value
-                        val currentEndPoint = _floorState.value.endPoint.point.value
-                        val incomingValue = event.obj
+                val startPointValue = _floorState.value.startObject.obj.value
+                val endPointValue = _floorState.value.endObject.obj.value
 
-                        when {
-                            currentStartPoint == null && currentEndPoint == null -> {
-                                _floorState.value.startPoint.point.value = incomingValue
-                            }
-                            currentStartPoint == incomingValue -> {
-                                _floorState.value.startPoint.point.value = null
-                            }
-                            currentEndPoint == incomingValue -> {
-                                _floorState.value.endPoint.point.value = null
-                            }
-                            currentStartPoint == null && currentEndPoint != null -> {
-                                _floorState.value.startPoint.point.value = incomingValue
-                            }
-                            currentStartPoint != null && currentEndPoint == null -> {
-                                _floorState.value.endPoint.point.value = incomingValue
-                            }
-                        }
+                if (startPointValue != null && endPointValue != null) {
+                    val startPointCopy = startPointValue::class.java.newInstance()
+                    val endPointCopy = endPointValue::class.java.newInstance()
+
+                    for (property in startPointValue::class.java.declaredFields) {
+                        property.isAccessible = true
+                        property.set(startPointCopy, property.get(startPointValue))
                     }
-                    is Path -> {
 
+                    for (property in endPointValue::class.java.declaredFields) {
+                        property.isAccessible = true
+                        property.set(endPointCopy, property.get(endPointValue))
+                    }
+
+                    for (property in startPointValue::class.java.declaredFields) {
+                        property.isAccessible = true
+                        property.set(startPointValue, property.get(endPointCopy))
+                    }
+
+                    for (property in endPointValue::class.java.declaredFields) {
+                        property.isAccessible = true
+                        property.set(endPointValue, property.get(startPointCopy))
+                    }
+
+                    _floorState.value.startObject.obj.value = startPointValue
+                    _floorState.value.endObject.obj.value = endPointValue
+                }
+            }
+
+            is MapScreenEvent.OnMapTap -> {
+                val currentStartPoint = _floorState.value.startObject.obj.value
+                val currentEndPoint = _floorState.value.endObject.obj.value
+                val incomingValue = event.obj
+                when {
+                    currentStartPoint == null && currentEndPoint == null -> {
+                        _floorState.value.startObject.obj.value = incomingValue
+                    }
+                    currentStartPoint == incomingValue -> {
+                        _floorState.value.startObject.obj.value = null
+                    }
+                    currentEndPoint == incomingValue -> {
+                        _floorState.value.endObject.obj.value = null
+                    }
+                    currentStartPoint == null && currentEndPoint != null -> {
+                        _floorState.value.startObject.obj.value = incomingValue
+                    }
+                    currentStartPoint != null && currentEndPoint == null -> {
+                        _floorState.value.endObject.obj.value = incomingValue
                     }
                 }
             }
@@ -175,7 +195,8 @@ class MapScreenViewModel@Inject constructor(
 
             if (_floorsList.isNotEmpty()) {
                 val newFloor = _floorsList[0]
-                if (_floorState.value.currentFloor == null || _floorState.value.currentFloor?.floorId != newFloor.floorId) {
+//                _floorState.value.currentFloor == null ||
+                if (_floorState.value.currentFloor?.floorId != newFloor.floorId) {
                     _floorState.value = _floorState.value.copy(currentFloor = newFloor)
                     viewModelScope.launch {
                         withContext(Dispatchers.IO) {

@@ -2,23 +2,20 @@ package com.example.tiunavigationv1.feature_map.presentation.map
 
 import androidx.compose.runtime.mutableStateOf
 import com.example.tiunavigationv1.feature_map.domain.model.*
-import org.apache.commons.lang3.tuple.MutablePair
 
 data class FloorState(
     var currentFloor: Floor? = null,
 
-    var startPoint: PointOfRouteState = PointOfRouteState(
+    var startObject: PointOfRouteState = PointOfRouteState(
         mutableStateOf(""),
         "Где вы...",
-        mutableStateOf(null)
+        mutableStateOf(null),
     ),
-    var endPoint: PointOfRouteState = PointOfRouteState(
+    var endObject: PointOfRouteState = PointOfRouteState(
         mutableStateOf(""),
         "Куда вам нужно попасть...",
-        mutableStateOf(null)
+        mutableStateOf(null),
     ),
-
-    var activePaths: MutablePair<Path?, Path?> = MutablePair(null, null),
 
     var paths: List<Path> = listOf(),
     var points: List<Point> = listOf(),
