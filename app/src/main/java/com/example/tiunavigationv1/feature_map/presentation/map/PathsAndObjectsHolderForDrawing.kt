@@ -14,8 +14,11 @@ data class PathsAndObjectsHolderForDrawing(
     val internalWallsPath: PathsForDrawingState = PathsForDrawingState(color = Color.Blue),
     val othersPath: PathsForDrawingState = PathsForDrawingState(color = Color.Blue),
 
-    val objects: ObjectsForDrawingState = ObjectsForDrawingState(color = Color.Red),
+    val objects: ObjectsForDrawingState = ObjectsForDrawingState(color = Color.Green),
 
     val pathsMap: MutableMap<Path, Pair<PathModel, List<Offset>>> = mutableMapOf(),
-    val pointsMap: MutableMap<Offset, Point> = mutableMapOf()
+    val pointsMap: MutableMap<Offset, Point> = mutableMapOf(),
+
+    val activePaths: PathsForDrawingState = PathsForDrawingState(color = Color.Red),
+    val activeObjects: ObjectsForDrawingState = ObjectsForDrawingState(color = Color.Red),
 )

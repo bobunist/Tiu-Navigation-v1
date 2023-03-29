@@ -17,6 +17,4 @@ sealed class MapScreenEvent{
 
     object OnSwapStartEndPoints: MapScreenEvent()
 
-    object OnStartPath: MapScreenEvent()
-
 }

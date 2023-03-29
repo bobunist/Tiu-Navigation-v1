@@ -8,5 +8,5 @@ import com.example.tiunavigationv1.feature_map.domain.model.Point
 data class PointOfRouteState(
     val text: MutableState<String>,
     val hint: String,
-    val obj: MutableState<Any?> = mutableStateOf(null),
+    val obj: MutableState<MapElement?> = mutableStateOf(null),
 )

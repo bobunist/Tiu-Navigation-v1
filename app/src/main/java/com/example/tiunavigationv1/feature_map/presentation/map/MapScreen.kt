@@ -16,8 +16,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.tiunavigationv1.feature_map.domain.model.Path
-import com.example.tiunavigationv1.feature_map.domain.model.Point
 import com.example.tiunavigationv1.feature_map.presentation.main.components.TopBar
 import com.example.tiunavigationv1.feature_map.presentation.map.components.*
 
@@ -44,8 +42,8 @@ fun MapScreen(
 
     val floorState = viewModel.floorState.collectAsState()
 
-    val startPointState = viewModel.floorState.value.startPoint
-    val endPointState = viewModel.floorState.value.endPoint
+    val startPointState = viewModel.floorState.value.startObject
+    val endPointState = viewModel.floorState.value.endObject
 
     val isSearchListVisible = viewModel.searchListState.isSearchListVisible.value
 
@@ -67,8 +65,8 @@ fun MapScreen(
                         floorState = floorState,
                         configuration =  configuration,
                         density = density
-                    ) { point: Point, path: Path ->
-                        viewModel.onEvent(MapScreenEvent.OnMapTap(point, path))
+                    ) { mapElement ->
+                        viewModel.onEvent(MapScreenEvent.OnMapTap(mapElement))
                     }
                 }
             }

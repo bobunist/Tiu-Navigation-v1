@@ -22,4 +22,3 @@ data class FloorState(
     var nodes: List<Node> = listOf(),
     var edges: List<Edge> = listOf(),
 )
-

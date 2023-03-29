@@ -6,7 +6,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tiunavigationv1.feature_map.domain.model.Floor
-import com.example.tiunavigationv1.feature_map.domain.model.Path
 import com.example.tiunavigationv1.feature_map.domain.model.Point
 import com.example.tiunavigationv1.feature_map.domain.use_case.MapUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -95,18 +94,14 @@ class MapScreenViewModel@Inject constructor(
             }
             is MapScreenEvent.SetPoint -> {
                 if (_searchListState.isStartList.value) {
-                    _floorState.value.startObject.obj.value = event.point.copy()
-                    _floorState.value.startObject.obj.value = event.point.copy()
+                    _floorState.value.startObject.obj.value = MapElement.PointElement(event.point)
                     _floorState.value.startObject.text.value = event.point.pointName.toString()
                 } else {
-                    _floorState.value.endObject.obj.value = event.point.copy()
+                    _floorState.value.endObject.obj.value = MapElement.PointElement(event.point)
                     _floorState.value.endObject.text.value = event.point.pointName.toString()
                 }
                 _searchListState.searchList.clear()
                 _searchListState.isSearchListVisible.value = false
-            }
-            is MapScreenEvent.OnStartPath -> {
-
             }
             is MapScreenEvent.OnSwapStartEndPoints -> {
                 val startPointValue = _floorState.value.startObject.obj.value
@@ -164,6 +159,10 @@ class MapScreenViewModel@Inject constructor(
                 }
             }
         }
+    }
+
+    private fun buildWay(){
+        
     }
 
     private suspend fun loadFloor(){

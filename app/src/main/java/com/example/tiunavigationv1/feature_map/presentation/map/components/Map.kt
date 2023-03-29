@@ -24,6 +24,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.pointer.*
+import com.example.tiunavigationv1.feature_map.presentation.map.MapElement
+import kotlinx.coroutines.delay
 import kotlin.math.*
 
 @Composable
@@ -32,14 +34,15 @@ fun Map3(
     floorState: State<FloorState>,
     configuration: Configuration,
     density: Density,
-    onTapEvent: (Any) -> Unit
+    onTapEvent: (MapElement) -> Unit
 ) {
     val width = with(density) { configuration.screenWidthDp.dp.toPx() }
     val height = width / 3 * 2
     val (isDataLoaded, setDataLoaded) = remember { mutableStateOf(false) }
     var pathsAndObjects =  PathsAndObjectsHolderForDrawing()
-    LaunchedEffect(floorState.value.paths) {
-
+    LaunchedEffect(floorState.value) {
+        delay(50)
+//        может работает и без delay
         setDataLoaded(false)
         if (floorState.value.points.isNotEmpty() && floorState.value.paths.isNotEmpty()) {
             setDataLoaded(true)
@@ -77,6 +80,45 @@ fun Map3(
 
                     for (path in pathsAndObjects.stairsPath.paths)
                         drawScope.drawPath(path, pathsAndObjects.stairsPath.color, style = Stroke(10f))
+
+                    floorState.value.startObject.obj.value?.let { startObject ->
+                        when (startObject) {
+                            is MapElement.PointElement -> {
+                                val point = pointToOffset(startObject.point, width, height)
+                                drawScope.drawCircle(Color.Green, 20f, point)
+                            }
+                            is MapElement.PathElement -> {
+                                val path = pathsAndObjects.pathsMap.filterValues { it.first == startObject.path }.keys.first()
+                                drawScope.drawPath(path, Color.Green, style = Stroke(15f))
+                            }
+                        }
+                    }
+
+                    floorState.value.startObject.obj.value?.let { startObject ->
+                        when (startObject) {
+                            is MapElement.PointElement -> {
+                                val offset = pointToOffset(startObject.point, width, height)
+                                drawScope.drawCircle(Color.Green, 20f, offset)
+                            }
+                            is MapElement.PathElement -> {
+                                val path = pathsAndObjects.pathsMap.filterValues { it.first == startObject.path }.keys.first()
+                                drawScope.drawPath(path, Color.Green, style = Stroke(15f))
+                            }
+                        }
+                    }
+
+                    floorState.value.endObject.obj.value?.let { endObject ->
+                        when (endObject) {
+                            is MapElement.PointElement -> {
+                                val offset = pointToOffset(endObject.point, width, height)
+                                drawScope.drawCircle(Color.Red, 20f, offset)
+                            }
+                            is MapElement.PathElement -> {
+                                val path = pathsAndObjects.pathsMap.filterValues { it.first == endObject.path }.keys.first()
+                                drawScope.drawPath(path, Color.Red, style = Stroke(10f))
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -90,7 +132,7 @@ fun Map3(
                         for (circleCenter in pathsAndObjects.objects.objects) {
                             if (isPointInsideCircle(tap, circleCenter, 25f)) {
                                 val pointModel = pathsAndObjects.pointsMap[circleCenter]
-                                pointModel?.let { onTapEvent(it) }
+                                pointModel?.let { onTapEvent(MapElement.PointElement(it)) }
                                 return@detectTapGestures
                             }
                         }
@@ -98,7 +140,7 @@ fun Map3(
                             val polygonPoints = pathsAndObjects.pathsMap[path]?.second
                             val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
                             if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
-                                onTapEvent(pathModel)
+                                onTapEvent(MapElement.PathElement(pathModel))
                                 return@detectTapGestures
                             }
                         }
@@ -106,7 +148,7 @@ fun Map3(
                             val polygonPoints = pathsAndObjects.pathsMap[path]?.second
                             val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
                             if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
-                                onTapEvent(pathModel)
+                                onTapEvent(MapElement.PathElement(pathModel))
                                 return@detectTapGestures
                             }
                         }
@@ -114,7 +156,7 @@ fun Map3(
                             val polygonPoints = pathsAndObjects.pathsMap[path]?.second
                             val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
                             if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
-                                onTapEvent(pathModel)
+                                onTapEvent(MapElement.PathElement(pathModel))
                                 return@detectTapGestures
                             }
                         }
@@ -171,10 +213,6 @@ fun isRayCrossingEdge(p: Offset, a: Offset, b: Offset): Boolean {
 
     return testOrientation >= edgeOrientation
 }
-
-
-
-
 
 fun initMap(
     pointsList: List<Point>,
