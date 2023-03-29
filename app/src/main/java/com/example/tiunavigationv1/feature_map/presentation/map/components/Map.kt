@@ -1,6 +1,7 @@
 package com.example.tiunavigationv1.feature_map.presentation.map.components
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
@@ -175,44 +176,30 @@ private fun isPointInsideCircle(point: Offset, circleCenter: Offset, radius: Flo
     return distance <= radius
 }
 
-private fun isPointInsidePolygon(polygonPoints: List<Offset>, point: Offset): Boolean {
-    var crossings = 0
+fun isPointInsidePolygon(polygonPoints: List<Offset>, point: Offset): Boolean {
+    val vertices = polygonPoints.map { Vertex(it.x, it.y) }
+    val pointVertex = Vertex(point.x, point.y)
 
-    for (i in polygonPoints.indices) {
-        val p1 = polygonPoints[i]
-        val p2 = polygonPoints[(i + 1) % polygonPoints.size] // Wrap around to the first vertex for the last edge
+    var inside = false
+    var i = 0
+    var j = vertices.size - 1
+    while (i < vertices.size) {
+        val vertexI = vertices[i]
+        val vertexJ = vertices[j]
 
-        if (isRayCrossingEdge(point, p1, p2)) {
-            crossings++
+        if (vertexI.y < pointVertex.y && vertexJ.y >= pointVertex.y || vertexJ.y < pointVertex.y && vertexI.y >= pointVertex.y) {
+            if (vertexI.x + (pointVertex.y - vertexI.y) / (vertexJ.y - vertexI.y) * (vertexJ.x - vertexI.x) < pointVertex.x) {
+                inside = !inside
+            }
         }
+        j = i++
     }
-
-    return crossings % 2 != 0
+    return inside
 }
 
-fun isRayCrossingEdge(p: Offset, a: Offset, b: Offset): Boolean {
-    if (a.y > b.y) {
-        return isRayCrossingEdge(p, b, a)
-    }
-    if (p.y == a.y || p.y == b.y) {
-        return false
-    }
-    if (p.y > b.y || p.y < a.y) {
-        return false
-    }
-    if (p.x >= max(a.x, b.x)) {
-        return false
-    }
+data class Vertex(val x: Float, val y: Float)
 
-    if (p.x < min(a.x, b.x)) {
-        return true
-    }
 
-    val edgeOrientation = (b.y - a.y) / (b.x - a.x)
-    val testOrientation = (p.y - a.y) / (p.x - a.x)
-
-    return testOrientation >= edgeOrientation
-}
 
 fun initMap(
     pointsList: List<Point>,
@@ -221,14 +208,14 @@ fun initMap(
     height: Float
 ): PathsAndObjectsHolderForDrawing{
     val paths = PathsAndObjectsHolderForDrawing()
-    val mutablePointsList = pointsList.toMutableList()
+    val mutablePointsList = pointsList.toMutableSet()
     val pathsMap: MutableMap<Path, Pair<PathModel, List<Offset>>> = mutableMapOf()
     val pointsMap: MutableMap<Offset, Point> = mutableMapOf()
 
     for (pathModel in pathsList) {
         val pointsForPath = mutableListOf<Point>()
         mutablePointsList.forEach { point ->
-            if (isPointObject(point) && !mutablePointsList.contains(point)) {
+            if (isPointObject(point)) {
                 val offsetPoint = Offset(point.x * width, point.y * height)
                 paths.objects.objects.add(offsetPoint)
                 pointsMap[offsetPoint] = point
@@ -239,7 +226,7 @@ fun initMap(
         }
         pointsForPath.sortBy { it.inPathId }
         val path = makePathFromPoints(pointsForPath, width, height)
-        pathsMap[path] = Pair(pathModel, pointsForPath.map { point -> pointToOffset(point, height, width) })
+        pathsMap[path] = Pair(pathModel, pointsForPath.map { point -> pointToOffset(point, width, height) })
         when (pathModel.pathType){
             PathType.ELEVATOR -> {paths.elevatorsPath.paths.add(path)}
             PathType.STAIRS -> {paths.stairsPath.paths.add(path)}
@@ -252,6 +239,7 @@ fun initMap(
     }
     paths.pointsMap.putAll(pointsMap)
     paths.pathsMap.putAll(pathsMap)
+
     return paths
 }
 

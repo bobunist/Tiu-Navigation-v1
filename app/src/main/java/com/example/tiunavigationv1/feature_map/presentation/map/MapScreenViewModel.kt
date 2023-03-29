@@ -1,5 +1,6 @@
 package com.example.tiunavigationv1.feature_map.presentation.map
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -69,12 +70,12 @@ class MapScreenViewModel@Inject constructor(
                 if (_floorState.value.startObject.text.value.isNotBlank()){
                     viewModelScope.launch {
                         withContext(Dispatchers.IO){
-                            getSearchListOfPoints(_floorState.value.startObject.text.value)
-                            _searchListState.isSearchListVisible.value = true
+                            getSearchListOfObjects(_floorState.value.startObject.text.value)
                         }
+                        _searchListState.isSearchListVisible.value = true
                     }
                 }
-                else _searchListState.searchList = emptyList()
+                else _searchListState.searchList.clear()
             }
             is MapScreenEvent.EnteredEndPoint -> {
                 _floorState.value.endObject.text.value = event.text
@@ -82,12 +83,12 @@ class MapScreenViewModel@Inject constructor(
                 if (_floorState.value.endObject.text.value.isNotBlank()){
                     viewModelScope.launch {
                         withContext(Dispatchers.IO) {
-                            getSearchListOfPoints(_floorState.value.endObject.text.value)
-                            _searchListState.isSearchListVisible.value = true
+                            getSearchListOfObjects(_floorState.value.endObject.text.value)
                         }
+                        _searchListState.isSearchListVisible.value = true
                     }
                 }
-                else _searchListState.searchList = emptyList()
+                else _searchListState.searchList.clear()
             }
 
             is MapScreenEvent.SetPoint -> {
@@ -98,7 +99,7 @@ class MapScreenViewModel@Inject constructor(
                     _floorState.value.endObject.obj.value = event.obj
                     _floorState.value.endObject.text.value = event.obj.getName()
                 }
-                _searchListState.searchList = emptyList()
+                _searchListState.searchList.clear()
                 _searchListState.isSearchListVisible.value = false
                 updateWayIfPossible()
             }
@@ -143,21 +144,33 @@ class MapScreenViewModel@Inject constructor(
                 when {
                     currentStartPoint == null && currentEndPoint == null -> {
                         _floorState.value.startObject.obj.value = incomingValue
+                        _floorState.value.startObject.text.value = incomingValue.getName()
                     }
                     currentStartPoint == incomingValue -> {
                         _floorState.value.startObject.obj.value = null
+                        _floorState.value.startObject.text.value = ""
                     }
                     currentEndPoint == incomingValue -> {
                         _floorState.value.endObject.obj.value = null
+                        _floorState.value.endObject.text.value = ""
                     }
                     currentStartPoint == null && currentEndPoint != null -> {
                         _floorState.value.startObject.obj.value = incomingValue
+                        _floorState.value.startObject.text.value = incomingValue.getName()
                     }
                     currentStartPoint != null && currentEndPoint == null -> {
                         _floorState.value.endObject.obj.value = incomingValue
+                        _floorState.value.endObject.text.value = incomingValue.getName()
                     }
+                    else -> {
+                        _floorState.value.endObject.obj.value = incomingValue
+                        _floorState.value.endObject.text.value = incomingValue.getName()
+                    }
+
                 }
                 updateWayIfPossible()
+                _floorState.value.startObject.obj.value?.getName()?.let { Log.d("First", it) }
+                _floorState.value.endObject.obj.value?.getName()?.let { Log.d("Second", it) }
             }
         }
     }
@@ -291,10 +304,10 @@ class MapScreenViewModel@Inject constructor(
     }
 
 
-    private suspend fun getSearchListOfPoints(
+    private suspend fun getSearchListOfObjects(
         text: String
     ) {
-        _searchListState.searchList = emptyList()
+        _searchListState.searchList.clear()
         val tempList = mutableListOf<MapElement>()
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -311,9 +324,8 @@ class MapScreenViewModel@Inject constructor(
                     is MapElement.PathElement -> mapElement.path.pathName
                 }
             }
-
             withContext(Dispatchers.Main) {
-                _searchListState.searchList = sortedList.toList()
+                _searchListState.searchList.addAll(sortedList)
             }
         }
     }

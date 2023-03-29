@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 
 data class SearchListState(
-    var searchList: List<MapElement> = mutableStateListOf(),
+    val searchList: SnapshotStateList<MapElement> = mutableStateListOf(),
     val isStartList: MutableState<Boolean> = mutableStateOf(true),
     val isSearchListVisible: MutableState<Boolean> = mutableStateOf(false)
 )

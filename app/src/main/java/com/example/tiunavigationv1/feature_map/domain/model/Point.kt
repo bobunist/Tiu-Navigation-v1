@@ -68,7 +68,39 @@ data class Point(
 
     @ColumnInfo(name = "node_id")
     val nodeId: Long? = null,
-)
+){
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Point
+
+        if (buildingId != other.buildingId) return false
+        if (floorId != other.floorId) return false
+        if (pathId != other.pathId) return false
+        if (pointName != other.pointName) return false
+        if (pointType != other.pointType) return false
+        if (pointParameter != other.pointParameter) return false
+        if (inPathId != other.inPathId) return false
+        if (x != other.x) return false
+        if (y != other.y) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = buildingId.hashCode()
+        result = 31 * result + floorId.hashCode()
+        result = 31 * result + (pathId?.hashCode() ?: 0)
+        result = 31 * result + (pointName?.hashCode() ?: 0)
+        result = 31 * result + pointType.hashCode()
+        result = 31 * result + (pointParameter?.hashCode() ?: 0)
+        result = 31 * result + (inPathId ?: 0)
+        result = 31 * result + x.hashCode()
+        result = 31 * result + y.hashCode()
+        return result
+    }
+}
 
 
 
