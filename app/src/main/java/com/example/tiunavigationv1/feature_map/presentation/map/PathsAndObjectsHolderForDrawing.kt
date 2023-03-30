@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import com.example.tiunavigationv1.feature_map.domain.model.Point
+import java.util.Objects
 import com.example.tiunavigationv1.feature_map.domain.model.Path as PathModel
 
 data class PathsAndObjectsHolderForDrawing(
@@ -21,4 +22,6 @@ data class PathsAndObjectsHolderForDrawing(
 
     val activePaths: PathsForDrawingState = PathsForDrawingState(color = Color.Red),
     val activeObjects: ObjectsForDrawingState = ObjectsForDrawingState(color = Color.Red),
+
+    val activeWay: PathsForDrawingState = PathsForDrawingState(color = Color.Red),
 )

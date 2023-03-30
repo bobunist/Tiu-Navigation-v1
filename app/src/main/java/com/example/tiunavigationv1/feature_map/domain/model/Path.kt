@@ -49,4 +49,7 @@ data class Path(
 )
 
 
-//INSERT INTO paths (id, path_name, path_type, floor_id) VALUES (null, "some path", "ROOM", 1);
+//INSERT INTO paths (id, path_type, building_id, floor_id, node_id) VALUES
+//(1, 'ELEVATOR', 1, 1, 1),
+//(2, 'STAIRS', 1, 1, 2),
+//(3, 'ROOM', 1, 1, 3);

@@ -106,3 +106,23 @@ data class Point(
 
 //INSERT INTO points (id, building_id, floor_id, path_id, point_name, point_type, point_parameter, in_path_id, x, y) VALUES (null, 1, 1, null, "буфет", "OBJECT", null, null, 0.1, 0.1);
 //INSERT INTO points (id, building_id, floor_id, path_id, point_name, point_type, point_parameter, in_path_id, x, y) VALUES (null, 1, 1, 1, null, "PATH", "LINE", 1, 0.6, 0.6);
+
+//INSERT INTO points (id, point_name, building_id, floor_id, path_id, point_type, point_parameter, in_path_id, x, y, node_id) VALUES
+//(1, 'Path1Pt1', 1, 1, 1, 'PATH', 'LINE', 0, 0.1, 0.1, NULL),
+//(2, 'Path1Pt2', 1, 1, 1, 'PATH', 'LINE', 1, 0.4, 0.15, NULL),
+//(3, 'Path1Pt3', 1, 1, 1, 'PATH', 'LINE', 2, 0.3, 0.4, NULL),
+//(4, 'Path1Pt4', 1, 1, 1, 'PATH', 'LINE', 3, 0.05, 0.35, NULL),
+//
+//(5, 'Path2Pt1', 1, 1, 2, 'PATH', 'LINE', 0, 0.6, 0.1, NULL),
+//(6, 'Path2Pt2', 1, 1, 2, 'PATH', 'LINE', 1, 0.9, 0.15, NULL),
+//(7, 'Path2Pt3', 1, 1, 2, 'PATH', 'LINE', 2, 0.8, 0.4, NULL),
+//(8, 'Path2Pt4', 1, 1, 2, 'PATH', 'LINE', 3, 0.55, 0.35, NULL),
+//
+//(9, 'Path3Pt1', 1, 1, 3, 'PATH', 'LINE', 0, 0.2, 0.6, NULL),
+//(10, 'Path3Pt2', 1, 1, 3, 'PATH', 'LINE', 1, 0.5, 0.65, NULL),
+//(11, 'Path3Pt3', 1, 1, 3, 'PATH', 'LINE', 2, 0.4, 0.9, NULL),
+//(12, 'Path3Pt4', 1, 1, 3, 'PATH', 'LINE', 3, 0.1, 0.85, NULL),
+//
+//(13, 'Object1', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.9, 0.9, 4),
+//(14, 'Object2', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.1, 0.9, 5),
+//(15, 'Object3', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.9, 0.1, 6);

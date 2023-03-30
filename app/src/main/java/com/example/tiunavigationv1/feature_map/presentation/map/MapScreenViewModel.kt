@@ -1,6 +1,5 @@
 package com.example.tiunavigationv1.feature_map.presentation.map
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -138,6 +137,8 @@ class MapScreenViewModel@Inject constructor(
             }
 
             is MapScreenEvent.OnMapTap -> {
+                _searchListState.isSearchListVisible.value = false
+                _searchListState.searchList.clear()
                 val currentStartPoint = _floorState.value.startObject.obj.value
                 val currentEndPoint = _floorState.value.endObject.obj.value
                 val incomingValue = event.obj
@@ -169,48 +170,35 @@ class MapScreenViewModel@Inject constructor(
 
                 }
                 updateWayIfPossible()
-                _floorState.value.startObject.obj.value?.getName()?.let { Log.d("First", it) }
-                _floorState.value.endObject.obj.value?.getName()?.let { Log.d("Second", it) }
             }
         }
     }
 
     private fun updateWayIfPossible() {
-        if (_floorState.value.startObject.obj.value != null && _floorState.value.endObject.obj.value != null) {
-            updateWay(_floorState.value)
+        val startMapElement = _floorState.value.startObject.obj.value
+        val endMapElement = _floorState.value.endObject.obj.value
+
+        if (startMapElement != null && endMapElement != null) {
+            val startNodeId = startMapElement.getNodeId()
+            val endNodeId = endMapElement.getNodeId()
+
+            val startNode = _floorState.value.nodes.find { it.id == startNodeId }
+            val endNode = _floorState.value.nodes.find { it.id == endNodeId }
+
+            if (startNode != null && endNode != null) {
+                updateWay(_floorState.value, startNode, endNode)
+            }
         } else {
             _floorState.value.way = emptyList()
         }
     }
 
-    private fun updateWay(floorState: FloorState) {
-        val startMapElement = floorState.startObject.obj.value
-        val endMapElement = floorState.endObject.obj.value
-
-        if (startMapElement != null && endMapElement != null) {
-            val startNode = findNearestNodeForMapElement(floorState.nodes, startMapElement, floorState.points)
-            val endNode = findNearestNodeForMapElement(floorState.nodes, endMapElement, floorState.points)
-
-            if (startNode != null && endNode != null) {
-                val way = dijkstraShortestPath(floorState.nodes, floorState.edges, startNode, endNode)
-                floorState.way = way
-            }
-        }
+    private fun updateWay(floorState: FloorState, startNode: Node, endNode: Node) {
+        val way = dijkstraShortestPath(floorState.nodes, floorState.edges, startNode, endNode)
+        floorState.way = way
     }
 
 
-    private fun findNearestNodeForMapElement(nodes: List<Node>, mapElement: MapElement, points: List<Point>): Node? {
-        val (mapElementX, mapElementY) = when (mapElement) {
-            is MapElement.PointElement -> mapElement.getCoordinates()
-            is MapElement.PathElement -> mapElement.getCoordinates(points)
-        }
-
-        return nodes.minByOrNull { node ->
-            val dx = node.x - mapElementX!!
-            val dy = node.y - mapElementY!!
-            dx * dx + dy * dy
-        }
-    }
 
 
     private fun dijkstraShortestPath(nodes: List<Node>, edges: List<Edge>, startNode: Node, endNode: Node): List<Node> {

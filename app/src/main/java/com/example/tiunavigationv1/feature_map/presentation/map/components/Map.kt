@@ -25,6 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.pointer.*
+import com.example.tiunavigationv1.feature_map.domain.model.Edge
+import com.example.tiunavigationv1.feature_map.domain.model.Node
 import com.example.tiunavigationv1.feature_map.presentation.map.MapElement
 import kotlinx.coroutines.delay
 import kotlin.math.*
@@ -53,10 +55,13 @@ fun Map3(
     if (isDataLoaded) {
         val drawContent by remember(floorState.value) {
             derivedStateOf {
-                pathsAndObjects = initMap(floorState.value.points, floorState.value.paths, width, height);
+                pathsAndObjects = initMap(
+                    floorState.value.points,
+                    floorState.value.paths,
+                    width,
+                    height
+                );
                 { drawScope: DrawScope ->
-                    drawScope.drawPoints(pathsAndObjects.objects.objects,
-                        PointMode.Points, pathsAndObjects.objects.color, 30f)
 
                     for (point in pathsAndObjects.objects.objects)
                         drawScope.drawCircle(
@@ -86,40 +91,34 @@ fun Map3(
                         when (startObject) {
                             is MapElement.PointElement -> {
                                 val point = pointToOffset(startObject.point, width, height)
-                                drawScope.drawCircle(Color.Green, 20f, point)
+                                drawScope.drawCircle(Color.Green, 30f, point)
                             }
                             is MapElement.PathElement -> {
                                 val path = pathsAndObjects.pathsMap.filterValues { it.first == startObject.path }.keys.first()
-                                drawScope.drawPath(path, Color.Green, style = Stroke(15f))
+                                drawScope.drawPath(path, Color.Green, style = Stroke(20f))
                             }
                         }
                     }
 
-                    floorState.value.startObject.obj.value?.let { startObject ->
-                        when (startObject) {
-                            is MapElement.PointElement -> {
-                                val offset = pointToOffset(startObject.point, width, height)
-                                drawScope.drawCircle(Color.Green, 20f, offset)
-                            }
-                            is MapElement.PathElement -> {
-                                val path = pathsAndObjects.pathsMap.filterValues { it.first == startObject.path }.keys.first()
-                                drawScope.drawPath(path, Color.Green, style = Stroke(15f))
-                            }
-                        }
-                    }
 
                     floorState.value.endObject.obj.value?.let { endObject ->
                         when (endObject) {
                             is MapElement.PointElement -> {
                                 val offset = pointToOffset(endObject.point, width, height)
-                                drawScope.drawCircle(Color.Red, 20f, offset)
+                                drawScope.drawCircle(Color.Red, 30f, offset)
                             }
                             is MapElement.PathElement -> {
                                 val path = pathsAndObjects.pathsMap.filterValues { it.first == endObject.path }.keys.first()
-                                drawScope.drawPath(path, Color.Red, style = Stroke(10f))
+                                drawScope.drawPath(path, Color.Red, style = Stroke(20f))
                             }
                         }
                     }
+
+                    floorState.value.way.let { way ->
+                        val path = makePathFromNodes(way, width, height)
+                        drawScope.drawPath(path, Color.Red, style = Stroke(10f))
+                    }
+
                 }
             }
         }
@@ -139,24 +138,27 @@ fun Map3(
                         }
                         for (path in pathsAndObjects.roomsPath.paths) {
                             val polygonPoints = pathsAndObjects.pathsMap[path]?.second
-                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
-                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
+                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path =
+                                pathsAndObjects.pathsMap[path]!!.first
+                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true) {
                                 onTapEvent(MapElement.PathElement(pathModel))
                                 return@detectTapGestures
                             }
                         }
                         for (path in pathsAndObjects.elevatorsPath.paths) {
                             val polygonPoints = pathsAndObjects.pathsMap[path]?.second
-                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
-                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
+                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path =
+                                pathsAndObjects.pathsMap[path]!!.first
+                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true) {
                                 onTapEvent(MapElement.PathElement(pathModel))
                                 return@detectTapGestures
                             }
                         }
                         for (path in pathsAndObjects.stairsPath.paths) {
                             val polygonPoints = pathsAndObjects.pathsMap[path]?.second
-                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path = pathsAndObjects.pathsMap[path]!!.first
-                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true){
+                            val pathModel: com.example.tiunavigationv1.feature_map.domain.model.Path =
+                                pathsAndObjects.pathsMap[path]!!.first
+                            if (polygonPoints?.let { isPointInsidePolygon(it, tap) } == true) {
                                 onTapEvent(MapElement.PathElement(pathModel))
                                 return@detectTapGestures
                             }
@@ -237,15 +239,46 @@ fun initMap(
             PathType.OTHER -> {paths.othersPath.paths.add(path)}
         }
     }
+
     paths.pointsMap.putAll(pointsMap)
     paths.pathsMap.putAll(pathsMap)
 
     return paths
 }
 
+
+fun makePathFromNodes(nodes: List<Node>, width: Float, height: Float): Path {
+    Log.d("+makePathFromNodes", "+")
+    val path = Path()
+    for ((index, node) in nodes.withIndex()){
+        val pointOffset = nodeToOffset(node, width, height)
+        if (index == 0) path.moveTo(pointOffset.x, pointOffset.y)
+        else {
+            path.lineTo(pointOffset.x, pointOffset.y)
+            Log.d("+point", "+")
+//            when (point.pointParameter) {
+//                PointParameter.LINE -> path.lineTo(pointOffset.x, pointOffset.y)
+//                PointParameter.BEZIER3 -> {
+//                    val point1 = pointToOffset(points[index - 2], width, height)
+//                    val point2 = pointToOffset(points[index - 1], width, height)
+//                    val point3 = pointToOffset(points[index], width, height)
+//                    cubicBezierForThreePoints(listOf(point1, point2, point3), path)
+//                }
+//                else -> Unit
+//            }
+        }
+    }
+    return path
+}
+
 fun pointToOffset(point: Point, width: Float, height: Float): Offset{
     return Offset(point.x * width, point.y * height)
 }
+
+fun nodeToOffset(node: Node, width: Float, height: Float): Offset{
+    return Offset(node.x * width, node.y * height)
+}
+
 
 fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
     val path = Path()
