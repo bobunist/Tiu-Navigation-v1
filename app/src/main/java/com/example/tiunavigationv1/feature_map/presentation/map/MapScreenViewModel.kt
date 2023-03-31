@@ -206,6 +206,14 @@ class MapScreenViewModel@Inject constructor(
         val distances = nodes.associateBy({ it.id!! }, { Float.POSITIVE_INFINITY }).toMutableMap()
         val previousNodes = mutableMapOf<Long, Node?>()
 
+        val bidirectionalEdges = edges.toMutableList()
+        edges.forEach { edge ->
+            bidirectionalEdges.add(Edge(fromNodeId = edge.toNodeId,
+                toNodeId = edge.fromNodeId,
+                id = edge.id,
+                floorId = edge.floorId))
+        }
+
         distances[startNode.id!!] = 0f
 
         while (unvisitedNodes.isNotEmpty()) {
@@ -216,7 +224,7 @@ class MapScreenViewModel@Inject constructor(
                 break
             }
 
-            val currentEdges = edges.filter { it.fromNodeId == currentNode.id }
+            val currentEdges = bidirectionalEdges.filter { it.fromNodeId == currentNode.id }
             for (edge in currentEdges) {
                 val neighborNode = nodes.find { it.id == edge.toNodeId } ?: continue
                 val tentativeDistance = distances[currentNode.id!!]!! + distanceBetweenNodes(currentNode, neighborNode)

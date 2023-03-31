@@ -57,8 +57,8 @@ fun MapScreen(
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
             Card(modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f)
+                .fillMaxSize()
+                .aspectRatio(1f)
                 .align(Alignment.Center)) {
                 BoxWithConstraints {
                     Map3(

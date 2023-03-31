@@ -40,14 +40,14 @@ fun Map3(
     onTapEvent: (MapElement) -> Unit
 ) {
     val width = with(density) { configuration.screenWidthDp.dp.toPx() }
-    val height = width / 3 * 2
+    val height = width * 1
     val (isDataLoaded, setDataLoaded) = remember { mutableStateOf(false) }
     var pathsAndObjects =  PathsAndObjectsHolderForDrawing()
     LaunchedEffect(floorState.value) {
         delay(50)
 //        может работает и без delay
         setDataLoaded(false)
-        if (floorState.value.points.isNotEmpty() && floorState.value.paths.isNotEmpty()) {
+        if (floorState.value.points.isNotEmpty() || floorState.value.paths.isNotEmpty()) {
             setDataLoaded(true)
         }
     }
@@ -208,35 +208,53 @@ fun initMap(
     pathsList: List<PathModel>,
     width: Float,
     height: Float
-): PathsAndObjectsHolderForDrawing{
+): PathsAndObjectsHolderForDrawing {
     val paths = PathsAndObjectsHolderForDrawing()
     val mutablePointsList = pointsList.toMutableSet()
     val pathsMap: MutableMap<Path, Pair<PathModel, List<Offset>>> = mutableMapOf()
     val pointsMap: MutableMap<Offset, Point> = mutableMapOf()
 
-    for (pathModel in pathsList) {
-        val pointsForPath = mutableListOf<Point>()
-        mutablePointsList.forEach { point ->
-            if (isPointObject(point)) {
-                val offsetPoint = Offset(point.x * width, point.y * height)
-                paths.objects.objects.add(offsetPoint)
-                pointsMap[offsetPoint] = point
-            }
-            else if (pathModel.pathId == point.pathId){
-                pointsForPath.add(point)
-            }
+    if (pathsList.isEmpty()) {
+        pointsList.filter(::isPointObject).forEach { point ->
+            val offsetPoint = Offset(point.x * width, point.y * height)
+            paths.objects.objects.add(offsetPoint)
+            pointsMap[offsetPoint] = point
         }
-        pointsForPath.sortBy { it.inPathId }
-        val path = makePathFromPoints(pointsForPath, width, height)
-        pathsMap[path] = Pair(pathModel, pointsForPath.map { point -> pointToOffset(point, width, height) })
-        when (pathModel.pathType){
-            PathType.ELEVATOR -> {paths.elevatorsPath.paths.add(path)}
-            PathType.STAIRS -> {paths.stairsPath.paths.add(path)}
-            PathType.ROOM -> {paths.roomsPath.paths.add(path)
+    } else {
+        for (pathModel in pathsList) {
+            val pointsForPath = mutableListOf<Point>()
+            mutablePointsList.forEach { point ->
+                if (isPointObject(point)) {
+                    val offsetPoint = Offset(point.x * width, point.y * height)
+                    paths.objects.objects.add(offsetPoint)
+                    pointsMap[offsetPoint] = point
+                } else if (pathModel.pathId == point.pathId) {
+                    pointsForPath.add(point)
+                }
             }
-            PathType.OUTER_WALL -> {paths.outerWallPath.paths.add(path)}
-            PathType.INTERNAL_WALL -> {paths.internalWallsPath.paths.add(path)}
-            PathType.OTHER -> {paths.othersPath.paths.add(path)}
+            pointsForPath.sortBy { it.inPathId }
+            val path = makePathFromPoints(pointsForPath, width, height)
+            pathsMap[path] = Pair(pathModel, pointsForPath.map { point -> pointToOffset(point, width, height) })
+            when (pathModel.pathType) {
+                PathType.ELEVATOR -> {
+                    paths.elevatorsPath.paths.add(path)
+                }
+                PathType.STAIRS -> {
+                    paths.stairsPath.paths.add(path)
+                }
+                PathType.ROOM -> {
+                    paths.roomsPath.paths.add(path)
+                }
+                PathType.OUTER_WALL -> {
+                    paths.outerWallPath.paths.add(path)
+                }
+                PathType.INTERNAL_WALL -> {
+                    paths.internalWallsPath.paths.add(path)
+                }
+                PathType.OTHER -> {
+                    paths.othersPath.paths.add(path)
+                }
+            }
         }
     }
 
@@ -245,6 +263,7 @@ fun initMap(
 
     return paths
 }
+
 
 
 fun makePathFromNodes(nodes: List<Node>, width: Float, height: Float): Path {

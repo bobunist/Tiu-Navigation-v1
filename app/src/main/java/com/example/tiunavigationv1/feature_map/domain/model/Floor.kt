@@ -25,5 +25,5 @@ data class Floor(
     val buildingId: Long
 )
 
-//INSERT INTO floors (id, floor_name, building_id) VALUES (null, "1", 1);
-//INSERT INTO floors (id, floor_name, building_id) VALUES (null, "2", 1);
+//INSERT INTO floors (id, floor_name, building_id) VALUES (1, "1", 1);
+//INSERT INTO floors (id, floor_name, building_id) VALUES (2, "2", 1);

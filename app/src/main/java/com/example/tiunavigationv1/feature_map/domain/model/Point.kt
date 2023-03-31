@@ -126,3 +126,9 @@ data class Point(
 //(13, 'Object1', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.9, 0.9, 4),
 //(14, 'Object2', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.1, 0.9, 5),
 //(15, 'Object3', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.9, 0.1, 6);
+
+//INSERT INTO points (id, point_name, building_id, floor_id, path_id, point_type, point_parameter, in_path_id, x, y, node_id) VALUES
+//(1, 'буфет', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.5, 0.2, 1),
+//(2, 'библиотека', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.8, 0.4, 2),
+//(3, 'столовая', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.3, 0.4, 3),
+//(4, 'что нибудь', 1, 1, NULL, 'OBJECT', NULL, NULL, 0.5, 0.6, 4);
