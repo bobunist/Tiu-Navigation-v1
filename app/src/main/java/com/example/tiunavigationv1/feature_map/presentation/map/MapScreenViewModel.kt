@@ -7,11 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.tiunavigationv1.feature_map.domain.model.Edge
 import com.example.tiunavigationv1.feature_map.domain.model.Floor
 import com.example.tiunavigationv1.feature_map.domain.model.Node
-import com.example.tiunavigationv1.feature_map.domain.model.Point
 import com.example.tiunavigationv1.feature_map.domain.use_case.MapUseCases
 import com.example.tiunavigationv1.feature_map.domain.util.PathType
-import com.example.tiunavigationv1.feature_map.domain.util.PointParameter
-import com.example.tiunavigationv1.feature_map.domain.util.PointType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
