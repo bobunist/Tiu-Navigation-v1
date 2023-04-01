@@ -9,6 +9,9 @@ import com.example.tiunavigationv1.feature_map.domain.model.Floor
 import com.example.tiunavigationv1.feature_map.domain.model.Node
 import com.example.tiunavigationv1.feature_map.domain.model.Point
 import com.example.tiunavigationv1.feature_map.domain.use_case.MapUseCases
+import com.example.tiunavigationv1.feature_map.domain.util.PathType
+import com.example.tiunavigationv1.feature_map.domain.util.PointParameter
+import com.example.tiunavigationv1.feature_map.domain.util.PointType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -177,28 +180,86 @@ class MapScreenViewModel@Inject constructor(
     private fun updateWayIfPossible() {
         val startMapElement = _floorState.value.startObject.obj.value
         val endMapElement = _floorState.value.endObject.obj.value
+        val currentFloorId = _floorState.value.currentFloor!!.floorId
 
         if (startMapElement != null && endMapElement != null) {
-            val startNodeId = startMapElement.getNodeId()
-            val endNodeId = endMapElement.getNodeId()
-
-            val startNode = _floorState.value.nodes.find { it.id == startNodeId }
-            val endNode = _floorState.value.nodes.find { it.id == endNodeId }
-
-            if (startNode != null && endNode != null) {
-                updateWay(_floorState.value, startNode, endNode)
+            if (startMapElement.getFloorId() == endMapElement.getFloorId()) {
+                if (currentFloorId == startMapElement.getFloorId()) {
+                    updateWayOnSameFloor(_floorState.value, startMapElement, endMapElement)
+                } else {
+                    _floorState.value.way = emptyList()
+                }
+            } else {
+                updateWayOnDifferentFloors(_floorState.value, startMapElement, endMapElement,
+                    currentFloorId!!
+                )
             }
         } else {
             _floorState.value.way = emptyList()
         }
     }
 
+
+    private fun updateWayOnDifferentFloors(floorState: FloorState, startMapElement: MapElement, endMapElement: MapElement, selectedFloorId: Long) {
+        val startFloorId = startMapElement.getFloorId()
+        val endFloorId = endMapElement.getFloorId()
+
+        if (startFloorId == endFloorId && startFloorId == selectedFloorId) {
+            val startNodeId = startMapElement.getNodeId()
+            val endNodeId = endMapElement.getNodeId()
+
+            val startNode = floorState.nodes.find { it.id == startNodeId }
+            val endNode = floorState.nodes.find { it.id == endNodeId }
+
+            if (startNode != null && endNode != null) {
+                updateWay(floorState, startNode, endNode)
+            }
+        } else if (selectedFloorId == startFloorId || selectedFloorId == endFloorId) {
+            val mapElement = if (selectedFloorId == startFloorId) startMapElement else endMapElement
+            val nodeId = mapElement.getNodeId()
+            val node = floorState.nodes.find { it.id == nodeId }
+
+            if (node != null) {
+                val stairs = floorState.paths.filter { it.pathType == PathType.STAIRS }
+                val stairsNodes = stairs.mapNotNull { stair -> floorState.nodes.find { it.id == stair.nodeId } }
+
+                if (stairsNodes.isNotEmpty()) {
+                    val (nearestStairsNode, _) = stairsNodes.map { stairNode -> stairNode to distanceBetweenNodes(node, stairNode) }
+                        .minByOrNull { (_, distance) -> distance } ?: return
+
+                    if (selectedFloorId == startFloorId) {
+                        updateWay(floorState, node, nearestStairsNode)
+                    } else {
+                        updateWay(floorState, nearestStairsNode, node)
+                    }
+                }
+            }
+        } else {
+            floorState.way = emptyList()
+        }
+    }
+
+
+
+    private fun updateWayOnSameFloor(floorState: FloorState, startMapElement: MapElement, endMapElement: MapElement) {
+        val startNodeId = startMapElement.getNodeId()
+        val endNodeId = endMapElement.getNodeId()
+
+        val startNode = floorState.nodes.find { it.id == startNodeId }
+        val endNode = floorState.nodes.find { it.id == endNodeId }
+
+        if (startNode != null && endNode != null) {
+            updateWay(floorState, startNode, endNode)
+        } else {
+            floorState.way = emptyList()
+        }
+    }
+
+
     private fun updateWay(floorState: FloorState, startNode: Node, endNode: Node) {
         val way = dijkstraShortestPath(floorState.nodes, floorState.edges, startNode, endNode)
         floorState.way = way
     }
-
-
 
 
     private fun dijkstraShortestPath(nodes: List<Node>, edges: List<Edge>, startNode: Node, endNode: Node): List<Node> {

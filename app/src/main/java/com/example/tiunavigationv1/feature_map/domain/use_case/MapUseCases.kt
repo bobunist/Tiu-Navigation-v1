@@ -12,4 +12,6 @@ data class MapUseCases(
     val getEdgesByFloor: GetEdgesByFloor,
     val getNodesByFloor: GetNodesByFloor,
     val getPathsByName: GetPathsByName
-)
+){
+    
+}

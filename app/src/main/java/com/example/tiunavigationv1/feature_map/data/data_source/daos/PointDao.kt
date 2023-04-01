@@ -15,7 +15,7 @@ interface PointDao {
     @Query("SELECT * FROM points WHERE floor_id=:floorId")
     suspend fun getByFloor(floorId: Long): List<Point>
 
-    @Query("SELECT * FROM points WHERE point_name LIKE :name || '%' AND building_id =:buildingId ")
+    @Query("SELECT * FROM points WHERE point_name LIKE :name || '%' AND building_id =:buildingId AND point_type == 'OBJECT'")
     fun getByName(name: String, buildingId: Long): Flow<List<Point>>
 
     @Delete

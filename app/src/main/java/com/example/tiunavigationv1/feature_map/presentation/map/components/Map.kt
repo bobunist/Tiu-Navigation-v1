@@ -178,7 +178,7 @@ private fun isPointInsideCircle(point: Offset, circleCenter: Offset, radius: Flo
     return distance <= radius
 }
 
-fun isPointInsidePolygon(polygonPoints: List<Offset>, point: Offset): Boolean {
+private fun isPointInsidePolygon(polygonPoints: List<Offset>, point: Offset): Boolean {
     val vertices = polygonPoints.map { Vertex(it.x, it.y) }
     val pointVertex = Vertex(point.x, point.y)
 
@@ -199,11 +199,11 @@ fun isPointInsidePolygon(polygonPoints: List<Offset>, point: Offset): Boolean {
     return inside
 }
 
-data class Vertex(val x: Float, val y: Float)
+private data class Vertex(val x: Float, val y: Float)
 
 
 
-fun initMap(
+private fun initMap(
     pointsList: List<Point>,
     pathsList: List<PathModel>,
     width: Float,
@@ -266,7 +266,7 @@ fun initMap(
 
 
 
-fun makePathFromNodes(nodes: List<Node>, width: Float, height: Float): Path {
+private fun makePathFromNodes(nodes: List<Node>, width: Float, height: Float): Path {
     Log.d("+makePathFromNodes", "+")
     val path = Path()
     for ((index, node) in nodes.withIndex()){
@@ -290,16 +290,16 @@ fun makePathFromNodes(nodes: List<Node>, width: Float, height: Float): Path {
     return path
 }
 
-fun pointToOffset(point: Point, width: Float, height: Float): Offset{
+private fun pointToOffset(point: Point, width: Float, height: Float): Offset{
     return Offset(point.x * width, point.y * height)
 }
 
-fun nodeToOffset(node: Node, width: Float, height: Float): Offset{
+private fun nodeToOffset(node: Node, width: Float, height: Float): Offset{
     return Offset(node.x * width, node.y * height)
 }
 
 
-fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
+private fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
     val path = Path()
     for ((index, point) in points.withIndex()){
         val pointOffset = pointToOffset(point, width, height)
@@ -321,11 +321,11 @@ fun makePathFromPoints(points: List<Point>, width: Float, height: Float): Path {
     return path
 }
 
-fun cubicBezierForThreePoints(points: List<Offset>, path: Path){
+private fun cubicBezierForThreePoints(points: List<Offset>, path: Path){
     val secondPoint = Offset(points[0].x, ((points[1].y - points[0].y) * 4 / 3 + points[0].y))
     val thirdPoint = Offset(points[2].x, ((points[1].y - points[2].y) * 4 / 3 + points[2].y))
     val fourthPoint = Offset(points[2].x, points[2].y)
     path.cubicTo(secondPoint.x, secondPoint.y, thirdPoint.x, thirdPoint.y, fourthPoint.x, fourthPoint.y)
 }
 
-fun isPointObject(point: Point): Boolean = point.pointType == PointType.OBJECT
+private fun isPointObject(point: Point): Boolean = point.pointType == PointType.OBJECT
