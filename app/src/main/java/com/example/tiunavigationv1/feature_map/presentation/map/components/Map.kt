@@ -3,6 +3,7 @@ package com.example.tiunavigationv1.feature_map.presentation.map.components
 import android.content.res.Configuration
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -20,7 +21,6 @@ import com.example.tiunavigationv1.feature_map.domain.util.PointType
 import com.example.tiunavigationv1.feature_map.presentation.map.FloorState
 import com.example.tiunavigationv1.feature_map.presentation.map.PathsAndObjectsHolderForDrawing
 import com.example.tiunavigationv1.feature_map.domain.model.Path as PathModel
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +28,7 @@ import androidx.compose.ui.input.pointer.*
 import com.example.tiunavigationv1.feature_map.domain.model.Node
 import com.example.tiunavigationv1.feature_map.presentation.map.MapElement
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.*
 
 
@@ -45,6 +46,16 @@ fun Map3(
     var pathsAndObjects =  PathsAndObjectsHolderForDrawing()
 
     val drawPercentage = remember { Animatable(0f) }
+
+    val targetOffset = remember { mutableStateOf(Offset.Zero) }
+    val offset by animateOffsetAsState(
+        targetValue = targetOffset.value,
+        animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)
+    )
+    val zoom = remember { Animatable(1f) }
+    var angle by remember { mutableStateOf(0f) }
+
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(floorState.value.way) {
         drawPercentage.snapTo(0f)
@@ -86,9 +97,6 @@ fun Map3(
                         height = height,
                         drawPercentage = drawPercentage
                     )
-
-
-
                 }
             }
         }
@@ -96,6 +104,63 @@ fun Map3(
             modifier = modifier
                 .aspectRatio(1f)
                 .fillMaxSize()
+//                .pointerInput(Unit) {
+//                    var valueSaved = false
+//                    detectTransformGestures(
+//                        onGestureStart = {
+//                            // Обработка начала жеста, например, обновление пользовательского интерфейса
+//
+//                        },
+//                        onGesture = { centroid, pan, gestureZoom, gestureRotate, mainPointer, changes ->
+//                            val oldScale = zoom.value
+//                            val newScale = zoom.value * gestureZoom
+//
+//                            targetOffset.value = (targetOffset.value + centroid / oldScale).rotateBy(gestureRotate) -
+//                                    (centroid / newScale + pan / oldScale)
+//
+//                            if (!snapshotTaken.value && (newScale < 1f || newScale > 3f)) {
+//                                snapshotOffset.value = targetOffset.value
+//                                snapshotCentroid.value = centroid
+//                                snapshotPan.value = pan
+//                                snapshotZoom.value = zoom.value
+//                                snapshotRotate.value = gestureRotate
+//                                snapshotTaken.value = true
+//                            }
+//
+//                            coroutineScope.launch { zoom.snapTo(newScale) }
+//                            angle += gestureRotate
+//                        }
+//
+//                    )
+//                }
+
+                .pointerInput(Unit) {
+
+                    detectTransformGestures(
+                        onGestureStart = {
+                            // Обработка начала жеста, например, обновление пользовательского интерфейса
+
+                        },
+                        onGesture = { centroid, pan, gestureZoom, gestureRotate, mainPointer, changes ->
+                            val oldScale = zoom.value
+                            val newScale = zoom.value * gestureZoom
+                            if (newScale in 1f..3f){
+                                targetOffset.value = (targetOffset.value + centroid / oldScale).rotateBy(gestureRotate) -
+                                        (centroid / newScale + pan / oldScale)
+                                coroutineScope.launch { zoom.snapTo(newScale) }
+                                angle += gestureRotate
+                            }
+                        }
+                    )
+                }
+                .graphicsLayer {
+                    translationX = -offset.x * zoom.value
+                    translationY = -offset.y * zoom.value
+                    scaleX = zoom.value
+                    scaleY = zoom.value
+                    rotationZ = angle
+                    transformOrigin = TransformOrigin(0f, 0f)
+                }
                 .pointerInput(Unit) {
                     detectTapGestures { tap: Offset ->
                         for (circleCenter in pathsAndObjects.objects.objects) {
@@ -135,6 +200,7 @@ fun Map3(
                     }
                 }
         ) {
+            drawRect(Color.Black, Offset(0f, 0f) )
             drawContent(this)
         }
     } else {
@@ -142,6 +208,122 @@ fun Map3(
     }
 }
 
+suspend fun PointerInputScope.detectTransformGestures(
+    panZoomLock: Boolean = false,
+    consume: Boolean = true,
+    onGestureStart: (PointerInputChange) -> Unit = {},
+    onGesture: (
+        centroid: Offset,
+        pan: Offset,
+        zoom: Float,
+        rotation: Float,
+        mainPointer: PointerInputChange,
+        changes: List<PointerInputChange>
+    ) -> Unit,
+    onGestureEnd: (PointerInputChange) -> Unit = {}
+) {
+    forEachGesture {
+        awaitPointerEventScope {
+            var rotation = 0f
+            var zoom = 1f
+            var pan = Offset.Zero
+            var pastTouchSlop = false
+            val touchSlop = viewConfiguration.touchSlop
+            var lockedToPanZoom = false
+
+
+            // Wait for at least one pointer to press down, and set first contact position
+            val down: PointerInputChange = awaitFirstDown(requireUnconsumed = false)
+            onGestureStart(down)
+
+            var pointer = down
+            // Main pointer is the one that is down initially
+            var pointerId = down.id
+
+            do {
+                val event = awaitPointerEvent()
+
+                // If any position change is consumed from another PointerInputChange
+                val canceled =
+                    event.changes.any { !it.pressed }
+// тут
+                if (!canceled) {
+
+                    // Get pointer that is down, if first pointer is up
+                    // get another and use it if other pointers are also down
+                    // event.changes.first() doesn't return same order
+                    val pointerInputChange =
+                        event.changes.firstOrNull { it.id == pointerId }
+                            ?: event.changes.first()
+
+                    // Next time will check same pointer with this id
+                    pointerId = pointerInputChange.id
+                    pointer = pointerInputChange
+
+                    val zoomChange = event.calculateZoom()
+                    val rotationChange = event.calculateRotation()
+                    val panChange = event.calculatePan()
+
+                    if (!pastTouchSlop) {
+                        zoom *= zoomChange
+                        rotation += rotationChange
+                        pan += panChange
+
+                        val centroidSize = event.calculateCentroidSize(useCurrent = false)
+                        val zoomMotion = abs(1 - zoom) * centroidSize
+                        val rotationMotion =
+                            abs(rotation * PI.toFloat() * centroidSize / 180f)
+                        val panMotion = pan.getDistance()
+
+                        if (zoomMotion > touchSlop ||
+                            rotationMotion > touchSlop ||
+                            panMotion > touchSlop
+                        ) {
+                            pastTouchSlop = true
+                            lockedToPanZoom = panZoomLock && rotationMotion < touchSlop
+                        }
+                    }
+
+                    if (pastTouchSlop) {
+                        val centroid = event.calculateCentroid(useCurrent = false)
+                        val effectiveRotation = if (lockedToPanZoom) 0f else rotationChange
+                        if (effectiveRotation != 0f ||
+                            zoomChange != 1f ||
+                            panChange != Offset.Zero
+                        ) {
+                            onGesture(
+                                centroid,
+                                panChange,
+                                zoomChange,
+                                effectiveRotation,
+                                pointer,
+                                event.changes
+                            )
+                        }
+
+                        if (consume) {
+                            event.changes.forEach {
+                                if (it.positionChanged()) {
+                                    it.consumed
+                                }
+                            }
+                        }
+                    }
+                }
+            } while (!canceled && event.changes.any { it.pressed })
+            onGestureEnd(pointer)
+        }
+    }
+}
+
+
+fun Offset.rotateBy(angle: Float): Offset {
+    val angleInRadians = angle * PI / 180
+    return Offset(
+        (x * cos(angleInRadians) - y * sin(angleInRadians)).toFloat(),
+        (x * sin(angleInRadians) + y * cos(angleInRadians)).toFloat()
+    )
+}
 
 fun DrawScope.drawMapElements(
     pathsAndObjects: PathsAndObjectsHolderForDrawing,
@@ -231,6 +413,8 @@ fun DrawScope.drawMapElements(
         }
     }
 }
+
+
 
 fun makeListOfNodes(way: List<Node>, width: Float, height: Float): List<Offset> {
     return way.map { node ->
