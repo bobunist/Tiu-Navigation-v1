@@ -1,7 +1,7 @@
 package com.example.tiunavigationv1.feature_map.presentation.map.components
 
 import android.content.res.Configuration
-import android.util.Log
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
@@ -25,11 +25,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.pointer.*
-import com.example.tiunavigationv1.feature_map.domain.model.Edge
 import com.example.tiunavigationv1.feature_map.domain.model.Node
 import com.example.tiunavigationv1.feature_map.presentation.map.MapElement
 import kotlinx.coroutines.delay
 import kotlin.math.*
+
 
 @Composable
 fun Map3(
@@ -43,12 +43,29 @@ fun Map3(
     val height = width * 1
     val (isDataLoaded, setDataLoaded) = remember { mutableStateOf(false) }
     var pathsAndObjects =  PathsAndObjectsHolderForDrawing()
+
+    val drawPercentage = remember { Animatable(0f) }
+
+    LaunchedEffect(floorState.value.way) {
+        drawPercentage.snapTo(0f)
+        drawPercentage.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 1000, easing = LinearEasing)
+        )
+    }
+
+
     LaunchedEffect(floorState.value) {
         delay(50)
 //        может работает и без delay
         setDataLoaded(false)
         if (floorState.value.points.isNotEmpty() || floorState.value.paths.isNotEmpty()) {
             setDataLoaded(true)
+            drawPercentage.snapTo(0f)
+            drawPercentage.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 1000, easing = LinearEasing)
+            )
         }
     }
 
@@ -62,70 +79,22 @@ fun Map3(
                     height
                 );
                 { drawScope: DrawScope ->
-
-                    for (point in pathsAndObjects.objects.objects)
-                        drawScope.drawCircle(
-                            pathsAndObjects.objects.color,
-                            20f,
-                            point
-                        )
-                    for (path in pathsAndObjects.roomsPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.roomsPath.color, style = Stroke(10f))
-
-                    for (path in pathsAndObjects.elevatorsPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.elevatorsPath.color, style = Stroke(10f))
-
-                    for (path in pathsAndObjects.outerWallPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.outerWallPath.color, style = Stroke(10f))
-
-                    for (path in pathsAndObjects.internalWallsPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.internalWallsPath.color, style = Stroke(10f))
-
-                    for (path in pathsAndObjects.othersPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.othersPath.color, style = Stroke(10f))
-
-                    for (path in pathsAndObjects.stairsPath.paths)
-                        drawScope.drawPath(path, pathsAndObjects.stairsPath.color, style = Stroke(10f))
-
-                    floorState.value.startObject.obj.value?.let { startObject ->
-                        when (startObject) {
-                            is MapElement.PointElement -> {
-                                val point = pointToOffset(startObject.point, width, height)
-                                drawScope.drawCircle(Color.Green, 30f, point)
-                            }
-                            is MapElement.PathElement -> {
-                                val path = pathsAndObjects.pathsMap.filterValues { it.first == startObject.path }.keys.first()
-                                drawScope.drawPath(path, Color.Green, style = Stroke(20f))
-                            }
-                        }
-                    }
+                    drawScope.drawMapElements(
+                        pathsAndObjects = pathsAndObjects,
+                        floorState = floorState,
+                        width = width,
+                        height = height,
+                        drawPercentage = drawPercentage
+                    )
 
 
-                    floorState.value.endObject.obj.value?.let { endObject ->
-                        when (endObject) {
-                            is MapElement.PointElement -> {
-                                val offset = pointToOffset(endObject.point, width, height)
-                                drawScope.drawCircle(Color.Red, 30f, offset)
-                            }
-                            is MapElement.PathElement -> {
-                                val path = pathsAndObjects.pathsMap.filterValues { it.first == endObject.path }.keys.first()
-                                drawScope.drawPath(path, Color.Red, style = Stroke(20f))
-                            }
-                        }
-                    }
-
-                    floorState.value.way.let { way ->
-                        val path = makePathFromNodes(way, width, height)
-                        drawScope.drawPath(path, Color.Red, style = Stroke(10f))
-                    }
 
                 }
             }
         }
-
         Canvas(
             modifier = modifier
-                .aspectRatio(3 / 2f)
+                .aspectRatio(1f)
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures { tap: Offset ->
@@ -173,6 +142,103 @@ fun Map3(
     }
 }
 
+
+fun DrawScope.drawMapElements(
+    pathsAndObjects: PathsAndObjectsHolderForDrawing,
+    floorState: State<FloorState>,
+    width: Float,
+    height: Float,
+    drawPercentage: Animatable<Float, AnimationVector1D>
+) {
+    for (point in pathsAndObjects.objects.objects)
+        drawCircle(
+            pathsAndObjects.objects.color,
+            20f,
+            point
+        )
+    for (path in pathsAndObjects.roomsPath.paths)
+        drawPath(path, pathsAndObjects.roomsPath.color, style = Stroke(10f))
+
+    for (path in pathsAndObjects.elevatorsPath.paths)
+        drawPath(path, pathsAndObjects.elevatorsPath.color, style = Stroke(10f))
+
+    for (path in pathsAndObjects.outerWallPath.paths)
+        drawPath(path, pathsAndObjects.outerWallPath.color, style = Stroke(10f))
+
+    for (path in pathsAndObjects.internalWallsPath.paths)
+        drawPath(path, pathsAndObjects.internalWallsPath.color, style = Stroke(10f))
+
+    for (path in pathsAndObjects.othersPath.paths)
+        drawPath(path, pathsAndObjects.othersPath.color, style = Stroke(10f))
+
+    for (path in pathsAndObjects.stairsPath.paths)
+        drawPath(path, pathsAndObjects.stairsPath.color, style = Stroke(10f))
+
+    floorState.value.startObject.obj.value?.let { startObject ->
+        when (startObject) {
+            is MapElement.PointElement -> {
+                val point = pointToOffset(startObject.point, width, height)
+                drawCircle(Color.Green, 30f, point)
+            }
+            is MapElement.PathElement -> {
+                val path = pathsAndObjects.pathsMap.filterValues { it.first == startObject.path }.keys.first()
+                drawPath(path, Color.Green, style = Stroke(20f))
+            }
+        }
+    }
+
+    floorState.value.endObject.obj.value?.let { endObject ->
+        when (endObject) {
+            is MapElement.PointElement -> {
+                val offset = pointToOffset(endObject.point, width, height)
+                drawCircle(Color.Red, 30f, offset)
+            }
+            is MapElement.PathElement -> {
+                val path = pathsAndObjects.pathsMap.filterValues { it.first == endObject.path }.keys.first()
+                drawPath(path, Color.Red, style = Stroke(20f))
+            }
+        }
+    }
+    floorState.value.way.let { way ->
+        val points = makeListOfNodes(way, width, height)
+        val newPath = Path()
+
+        if (points.isNotEmpty()) {
+            val percentage = drawPercentage.value
+            val lastIndex = (points.size - 1) * percentage
+            val currentIndex = lastIndex.toInt()
+            val remainder = lastIndex - currentIndex
+
+            newPath.moveTo(points[0].x, points[0].y)
+
+            for (i in 1..currentIndex) {
+                newPath.lineTo(points[i].x, points[i].y)
+            }
+
+            if (currentIndex < points.size - 1) {
+                val startX = points[currentIndex].x
+                val startY = points[currentIndex].y
+                val endX = points[currentIndex + 1].x
+                val endY = points[currentIndex + 1].y
+
+                newPath.lineTo(
+                    startX + (endX - startX) * remainder,
+                    startY + (endY - startY) * remainder
+                )
+            }
+
+            drawPath(newPath, Color.Red, style = Stroke(10f))
+        }
+    }
+}
+
+fun makeListOfNodes(way: List<Node>, width: Float, height: Float): List<Offset> {
+    return way.map { node ->
+        nodeToOffset(node, width, height)
+    }
+}
+
+
 private fun isPointInsideCircle(point: Offset, circleCenter: Offset, radius: Float): Boolean {
     val distance = sqrt((point.x - circleCenter.x).pow(2) + (point.y - circleCenter.y).pow(2))
     return distance <= radius
@@ -200,8 +266,6 @@ private fun isPointInsidePolygon(polygonPoints: List<Offset>, point: Offset): Bo
 }
 
 private data class Vertex(val x: Float, val y: Float)
-
-
 
 private fun initMap(
     pointsList: List<Point>,
@@ -264,31 +328,6 @@ private fun initMap(
     return paths
 }
 
-
-
-private fun makePathFromNodes(nodes: List<Node>, width: Float, height: Float): Path {
-    Log.d("+makePathFromNodes", "+")
-    val path = Path()
-    for ((index, node) in nodes.withIndex()){
-        val pointOffset = nodeToOffset(node, width, height)
-        if (index == 0) path.moveTo(pointOffset.x, pointOffset.y)
-        else {
-            path.lineTo(pointOffset.x, pointOffset.y)
-            Log.d("+point", "+")
-//            when (point.pointParameter) {
-//                PointParameter.LINE -> path.lineTo(pointOffset.x, pointOffset.y)
-//                PointParameter.BEZIER3 -> {
-//                    val point1 = pointToOffset(points[index - 2], width, height)
-//                    val point2 = pointToOffset(points[index - 1], width, height)
-//                    val point3 = pointToOffset(points[index], width, height)
-//                    cubicBezierForThreePoints(listOf(point1, point2, point3), path)
-//                }
-//                else -> Unit
-//            }
-        }
-    }
-    return path
-}
 
 private fun pointToOffset(point: Point, width: Float, height: Float): Offset{
     return Offset(point.x * width, point.y * height)
