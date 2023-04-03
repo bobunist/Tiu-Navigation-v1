@@ -28,7 +28,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMapRepository(db: MapDatabase): MapRepository {
-        return MapRepositoryImpl(db.cityDao, db.buildingDao, db.floorDao, db.pathDao, db.pointDao)
+        return MapRepositoryImpl(db.cityDao, db.buildingDao, db.floorDao, db.pathDao, db.pointDao, db.graphDao)
     }
 
     @Provides
@@ -42,7 +42,10 @@ object AppModule {
             getPointsOfFloor = GetPointsOfFloor(repository),
             getPathsOfFloor = GetPathsOfFloor(repository),
             getFloor = GetFloor(repository),
-            getPointByName = GetPointByName(repository)
+            getPointsByName = GetPointsByName(repository),
+            getEdgesByFloor = GetEdgesByFloor(repository),
+            getNodesByFloor = GetNodesByFloor(repository),
+            getPathsByName = GetPathsByName(repository)
         )
     }
 }

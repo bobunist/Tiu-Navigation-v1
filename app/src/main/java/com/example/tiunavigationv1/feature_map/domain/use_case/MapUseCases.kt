@@ -8,5 +8,10 @@ data class MapUseCases(
     val getPointsOfFloor: GetPointsOfFloor,
     val getPathsOfFloor: GetPathsOfFloor,
     val getFloor: GetFloor,
-    val getPointByName: GetPointByName
-)
+    val getPointsByName: GetPointsByName,
+    val getEdgesByFloor: GetEdgesByFloor,
+    val getNodesByFloor: GetNodesByFloor,
+    val getPathsByName: GetPathsByName
+){
+    
+}

@@ -11,13 +11,14 @@ class MapRepositoryImpl(
     private val floorDao: FloorDao,
     private val pathDao: PathDao,
     private val pointDao: PointDao,
+    private val graphDao: GraphDao
 ): MapRepository {
 
     override fun getBuildingByAddress(address: String): Flow<List<Building>> {
         return buildingDao.getByAddress(address)
     }
 
-    override suspend fun getBuildings(): Flow<List<Building>> {
+    override fun getBuildings(): Flow<List<Building>> {
         return buildingDao.getAll()
     }
 
@@ -25,7 +26,7 @@ class MapRepositoryImpl(
         return buildingDao.getFavoriteList()
     }
 
-    override suspend fun getFloorsOfBuilding(buildingId: Long): Flow<List<Floor>> {
+    override fun getFloorsOfBuilding(buildingId: Long): Flow<List<Floor>> {
         return floorDao.getByBuildingId(buildingId)
     }
 
@@ -45,7 +46,21 @@ class MapRepositoryImpl(
         return floorDao.getById(floorId)
     }
 
-    override suspend fun getPointByName(name: String, buildingId: Long): Flow<List<Point>> {
+    override fun getPointByName(name: String, buildingId: Long): Flow<List<Point>> {
         return pointDao.getByName(name, buildingId)
     }
+
+    override suspend fun getNodesByFloor(floorId: Long): List<Node> {
+        return graphDao.getNodesByFloor(floorId)
+    }
+
+    override suspend fun getEdgesByFloor(floorId: Long): List<Edge> {
+        return graphDao.getEdgesByFloor(floorId)
+    }
+
+    override fun getPathsByName(name: String, buildingId: Long): Flow<List<Path>> {
+        return pathDao.getByName(name, buildingId)
+    }
+
+
 }

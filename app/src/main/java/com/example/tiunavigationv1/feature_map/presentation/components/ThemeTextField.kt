@@ -6,10 +6,14 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.example.tiunavigationv1.ui.theme.light_gray
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ThemeTextField(
     text: String,
@@ -18,12 +22,11 @@ fun ThemeTextField(
     onValueChange: (String) -> Unit,
     singleLine: Boolean = true,
 ) {
+
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
         elevation = 5.dp,
-
-
     ) {
         TextField(
             colors = TextFieldDefaults

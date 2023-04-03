@@ -10,7 +10,9 @@ import com.example.tiunavigationv1.feature_map.domain.model.*
     Building::class,
     Floor::class,
     Point::class,
-    Path::class], version = 1)
+    Path::class,
+    Node::class,
+    Edge::class], version = 1)
 abstract class MapDatabase : RoomDatabase() {
 
     abstract val cityDao: CityDao
@@ -18,6 +20,7 @@ abstract class MapDatabase : RoomDatabase() {
     abstract val floorDao: FloorDao
     abstract val pointDao: PointDao
     abstract val pathDao: PathDao
+    abstract val graphDao: GraphDao
 
 
     companion object {

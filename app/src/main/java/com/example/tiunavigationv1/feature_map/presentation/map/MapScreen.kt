@@ -1,29 +1,25 @@
+@file:Suppress("OPT_IN_IS_NOT_ENABLED")
+
 package com.example.tiunavigationv1.feature_map.presentation.map
 
-import android.util.Log
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.tiunavigationv1.feature_map.domain.model.Point
-import com.example.tiunavigationv1.feature_map.presentation.main.components.ThemeTextField
 import com.example.tiunavigationv1.feature_map.presentation.main.components.TopBar
 import com.example.tiunavigationv1.feature_map.presentation.map.components.*
-import kotlinx.coroutines.flow.StateFlow
 
+@OptIn(ExperimentalComposeUiApi::class)
 @ExperimentalAnimationApi
 @Composable
 fun MapScreen(
@@ -46,13 +42,14 @@ fun MapScreen(
 
     val floorState = viewModel.floorState.collectAsState()
 
-    val startPointState = viewModel.startPointState
-    val endPointState = viewModel.endPointState
+    val startPointState = viewModel.floorState.value.startObject
+    val endPointState = viewModel.floorState.value.endObject
 
     val isSearchListVisible = viewModel.searchListState.isSearchListVisible.value
 
     val searchList = viewModel.searchListState.searchList
 
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -60,11 +57,17 @@ fun MapScreen(
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
             Card(modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f)
+                .fillMaxSize()
+                .aspectRatio(1f)
                 .align(Alignment.Center)) {
                 BoxWithConstraints {
-                    Map3(floorState = floorState, configuration =  configuration, density = density)
+                    Map3(
+                        floorState = floorState,
+                        configuration =  configuration,
+                        density = density
+                    ) { mapElement ->
+                        viewModel.onEvent(MapScreenEvent.OnMapTap(mapElement))
+                    }
                 }
             }
             FloorBar(
@@ -106,8 +109,9 @@ fun MapScreen(
                         .heightIn(min = 30.dp),
                     onValueChange = {viewModel.onEvent(MapScreenEvent.EnteredEndPoint(it))})
                 if (isSearchListVisible) {
-                    SearchList(searchList, onItemClick = { item ->
-                        viewModel.onEvent(MapScreenEvent.SetPoint(item))
+                    SearchList(searchList, onItemClick = { mapElement ->
+                        viewModel.onEvent(MapScreenEvent.SetPoint(mapElement))
+                        keyboardController?.hide()
                     })
                 }
             }

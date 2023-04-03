@@ -19,6 +19,9 @@ interface PathDao {
     @Query("SELECT * FROM paths WHERE floor_id=:floorId")
     suspend fun getByFloor(floorId: Long): List<Path>
 
+    @Query("SELECT * FROM paths WHERE path_name LIKE :name || '%' AND building_id =:buildingId")
+    fun getByName(name: String, buildingId: Long): Flow<List<Path>>
+
     @Delete
     suspend fun delete(path: Path)
 }

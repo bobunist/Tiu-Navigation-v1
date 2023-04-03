@@ -1,5 +1,6 @@
 package com.example.tiunavigationv1.feature_map.domain.repository
 
+import androidx.room.Query
 import com.example.tiunavigationv1.feature_map.domain.model.*
 import kotlinx.coroutines.flow.Flow
 
@@ -8,11 +9,11 @@ interface MapRepository {
 
     fun getFavoriteList(): Flow<List<Building>>
 
-    suspend fun getBuildings(): Flow<List<Building>>
+    fun getBuildings(): Flow<List<Building>>
 
     fun getFloor(floorId: Long): Flow<Floor>
 
-    suspend fun getFloorsOfBuilding(buildingId: Long): Flow<List<Floor>>
+    fun getFloorsOfBuilding(buildingId: Long): Flow<List<Floor>>
 
     suspend fun getPointsOfFloor(floorId: Long): List<Point>
 
@@ -20,6 +21,12 @@ interface MapRepository {
 
     suspend fun reverseIsFavoriteField(buildingId: Long)
 
-    suspend fun getPointByName(name: String, buildingId: Long): Flow<List<Point>>
+    fun getPointByName(name: String, buildingId: Long): Flow<List<Point>>
+
+    suspend fun getNodesByFloor(floorId: Long): List<Node>
+
+    suspend fun getEdgesByFloor(floorId: Long): List<Edge>
+
+    fun getPathsByName(name: String, buildingId: Long): Flow<List<Path>>
 
 }
