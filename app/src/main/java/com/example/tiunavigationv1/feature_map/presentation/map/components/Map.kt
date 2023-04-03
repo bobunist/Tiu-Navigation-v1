@@ -28,7 +28,6 @@ import androidx.compose.ui.input.pointer.*
 import com.example.tiunavigationv1.feature_map.domain.model.Node
 import com.example.tiunavigationv1.feature_map.presentation.map.MapElement
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.*
 
 
@@ -43,19 +42,17 @@ fun Map3(
     val width = with(density) { configuration.screenWidthDp.dp.toPx() }
     val height = width * 1
     val (isDataLoaded, setDataLoaded) = remember { mutableStateOf(false) }
-    var pathsAndObjects =  PathsAndObjectsHolderForDrawing()
-
+    var pathsAndObjects = PathsAndObjectsHolderForDrawing()
     val drawPercentage = remember { Animatable(0f) }
 
     val targetOffset = remember { mutableStateOf(Offset.Zero) }
     val offset by animateOffsetAsState(
         targetValue = targetOffset.value,
-        animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)
+        animationSpec = tween(durationMillis = 300, easing = LinearOutSlowInEasing)
     )
-    val zoom = remember { Animatable(1f) }
-    var angle by remember { mutableStateOf(0f) }
+    val zoom = remember { mutableStateOf(1f) }
+    val canvasOffset = remember { mutableStateOf(Offset.Zero) }
 
-    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(floorState.value.way) {
         drawPercentage.snapTo(0f)
@@ -65,10 +62,11 @@ fun Map3(
         )
     }
 
-
     LaunchedEffect(floorState.value) {
+        canvasOffset.value = Offset.Zero
+        targetOffset.value = Offset.Zero
+        zoom.value = 1f
         delay(50)
-//        может работает и без delay
         setDataLoaded(false)
         if (floorState.value.points.isNotEmpty() || floorState.value.paths.isNotEmpty()) {
             setDataLoaded(true)
@@ -104,61 +102,38 @@ fun Map3(
             modifier = modifier
                 .aspectRatio(1f)
                 .fillMaxSize()
-//                .pointerInput(Unit) {
-//                    var valueSaved = false
-//                    detectTransformGestures(
-//                        onGestureStart = {
-//                            // Обработка начала жеста, например, обновление пользовательского интерфейса
-//
-//                        },
-//                        onGesture = { centroid, pan, gestureZoom, gestureRotate, mainPointer, changes ->
-//                            val oldScale = zoom.value
-//                            val newScale = zoom.value * gestureZoom
-//
-//                            targetOffset.value = (targetOffset.value + centroid / oldScale).rotateBy(gestureRotate) -
-//                                    (centroid / newScale + pan / oldScale)
-//
-//                            if (!snapshotTaken.value && (newScale < 1f || newScale > 3f)) {
-//                                snapshotOffset.value = targetOffset.value
-//                                snapshotCentroid.value = centroid
-//                                snapshotPan.value = pan
-//                                snapshotZoom.value = zoom.value
-//                                snapshotRotate.value = gestureRotate
-//                                snapshotTaken.value = true
-//                            }
-//
-//                            coroutineScope.launch { zoom.snapTo(newScale) }
-//                            angle += gestureRotate
-//                        }
-//
-//                    )
-//                }
-
                 .pointerInput(Unit) {
-
                     detectTransformGestures(
-                        onGestureStart = {
-                            // Обработка начала жеста, например, обновление пользовательского интерфейса
-
-                        },
-                        onGesture = { centroid, pan, gestureZoom, gestureRotate, mainPointer, changes ->
+                        onGestureStart = {},
+                        onGesture = { centroid, pan, gestureZoom, _, _, _ ->
                             val oldScale = zoom.value
-                            val newScale = zoom.value * gestureZoom
-                            if (newScale in 1f..3f){
-                                targetOffset.value = (targetOffset.value + centroid / oldScale).rotateBy(gestureRotate) -
-                                        (centroid / newScale + pan / oldScale)
-                                coroutineScope.launch { zoom.snapTo(newScale) }
-                                angle += gestureRotate
-                            }
-                        }
+                            val newScale = (zoom.value * gestureZoom).coerceIn(1f, 3f)
+
+                            val newOffset = (targetOffset.value + centroid / oldScale) - (centroid / newScale + pan / oldScale)
+                            val maxTranslationX = (width * (newScale - 1)) / 2
+                            val maxTranslationY = (height * (newScale - 1)) / 2
+
+                            targetOffset.value = Offset(
+                                x = newOffset.x.coerceIn(-maxTranslationX, maxTranslationX),
+                                y = newOffset.y.coerceIn(-maxTranslationY, maxTranslationY)
+                            )
+
+                            canvasOffset.value = Offset(
+                                x = (width - width * newScale) / 2,
+                                y = (height - height * newScale) / 2
+                            )
+
+                            zoom.value = newScale
+                        },
+                        onGestureEnd = {}
                     )
                 }
                 .graphicsLayer {
-                    translationX = -offset.x * zoom.value
-                    translationY = -offset.y * zoom.value
-                    scaleX = zoom.value
-                    scaleY = zoom.value
-                    rotationZ = angle
+                    translationX = canvasOffset.value.x - offset.x * zoom.value
+                    translationY = canvasOffset.value.y - offset.y * zoom.value
+                    scaleX = maxOf(1f, minOf(3f, zoom.value))
+                    scaleY = maxOf(1f, minOf(3f, zoom.value))
+                    rotationZ = 0f
                     transformOrigin = TransformOrigin(0f, 0f)
                 }
                 .pointerInput(Unit) {
@@ -246,7 +221,6 @@ suspend fun PointerInputScope.detectTransformGestures(
                 // If any position change is consumed from another PointerInputChange
                 val canceled =
                     event.changes.any { !it.pressed }
-// тут
                 if (!canceled) {
 
                     // Get pointer that is down, if first pointer is up
@@ -314,15 +288,6 @@ suspend fun PointerInputScope.detectTransformGestures(
             onGestureEnd(pointer)
         }
     }
-}
-
-
-fun Offset.rotateBy(angle: Float): Offset {
-    val angleInRadians = angle * PI / 180
-    return Offset(
-        (x * cos(angleInRadians) - y * sin(angleInRadians)).toFloat(),
-        (x * sin(angleInRadians) + y * cos(angleInRadians)).toFloat()
-    )
 }
 
 fun DrawScope.drawMapElements(
