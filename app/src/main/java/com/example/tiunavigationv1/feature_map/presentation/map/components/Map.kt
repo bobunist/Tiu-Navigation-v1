@@ -1,6 +1,9 @@
 package com.example.tiunavigationv1.feature_map.presentation.map.components
 
+import android.content.Context
 import android.content.res.Configuration
+import android.graphics.drawable.VectorDrawable
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.*
@@ -25,6 +28,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import com.example.tiunavigationv1.R
 import com.example.tiunavigationv1.feature_map.domain.model.Node
 import com.example.tiunavigationv1.feature_map.presentation.map.MapElement
 import kotlinx.coroutines.delay
@@ -52,6 +62,10 @@ fun Map3(
     )
     val zoom = remember { mutableStateOf(1f) }
     val canvasOffset = remember { mutableStateOf(Offset.Zero) }
+
+    val stairsIcon = ImageBitmap.imageResource(id = R.drawable.stairs)
+    val elevatorIcon = ImageBitmap.imageResource(id = R.drawable.elevator)
+
 
 
     LaunchedEffect(floorState.value.way) {
@@ -93,7 +107,9 @@ fun Map3(
                         floorState = floorState,
                         width = width,
                         height = height,
-                        drawPercentage = drawPercentage
+                        drawPercentage = drawPercentage,
+                        stairsIcon = stairsIcon,
+                        elevatorIcon = elevatorIcon
                     )
                 }
             }
@@ -109,7 +125,8 @@ fun Map3(
                             val oldScale = zoom.value
                             val newScale = (zoom.value * gestureZoom).coerceIn(1f, 3f)
 
-                            val newOffset = (targetOffset.value + centroid / oldScale) - (centroid / newScale + pan / oldScale)
+                            val newOffset =
+                                (targetOffset.value + centroid / oldScale) - (centroid / newScale + pan / oldScale)
                             val maxTranslationX = (width * (newScale - 1)) / 2
                             val maxTranslationY = (height * (newScale - 1)) / 2
 
@@ -290,12 +307,14 @@ suspend fun PointerInputScope.detectTransformGestures(
     }
 }
 
-fun DrawScope.drawMapElements(
+private fun DrawScope.drawMapElements(
     pathsAndObjects: PathsAndObjectsHolderForDrawing,
     floorState: State<FloorState>,
     width: Float,
     height: Float,
-    drawPercentage: Animatable<Float, AnimationVector1D>
+    drawPercentage: Animatable<Float, AnimationVector1D>,
+    elevatorIcon: ImageBitmap,
+    stairsIcon: ImageBitmap
 ) {
     for (point in pathsAndObjects.objects.objects)
         drawCircle(
@@ -306,9 +325,6 @@ fun DrawScope.drawMapElements(
     for (path in pathsAndObjects.roomsPath.paths)
         drawPath(path, pathsAndObjects.roomsPath.color, style = Stroke(10f))
 
-    for (path in pathsAndObjects.elevatorsPath.paths)
-        drawPath(path, pathsAndObjects.elevatorsPath.color, style = Stroke(10f))
-
     for (path in pathsAndObjects.outerWallPath.paths)
         drawPath(path, pathsAndObjects.outerWallPath.color, style = Stroke(10f))
 
@@ -318,8 +334,19 @@ fun DrawScope.drawMapElements(
     for (path in pathsAndObjects.othersPath.paths)
         drawPath(path, pathsAndObjects.othersPath.color, style = Stroke(10f))
 
-    for (path in pathsAndObjects.stairsPath.paths)
+    for (path in pathsAndObjects.elevatorsPath.paths) {
+        val bounds = path.getBounds()
+        val offset = IntOffset((bounds.left + bounds.width / 2).roundToInt() - 5, (bounds.top + bounds.height / 2).roundToInt() - 5)
+        drawImage(elevatorIcon, offset, srcSize = IntSize(10, 10))
+        drawPath(path, pathsAndObjects.elevatorsPath.color, style = Stroke(10f))
+    }
+
+    for (path in pathsAndObjects.stairsPath.paths) {
+        val bounds = path.getBounds()
+        val offset = IntOffset((bounds.left + bounds.width / 2).roundToInt() - 5, (bounds.top + bounds.height / 2).roundToInt() - 5)
+        drawImage(stairsIcon, offset, srcSize = IntSize(10, 10))
         drawPath(path, pathsAndObjects.stairsPath.color, style = Stroke(10f))
+    }
 
     floorState.value.startObject.obj.value?.let { startObject ->
         when (startObject) {
@@ -517,3 +544,9 @@ private fun cubicBezierForThreePoints(points: List<Offset>, path: Path){
 }
 
 private fun isPointObject(point: Point): Boolean = point.pointType == PointType.OBJECT
+
+fun vectorResourceToImageBitmap(@DrawableRes resId: Int, context: Context): ImageBitmap {
+    val vectorDrawable = ContextCompat.getDrawable(context, resId) as VectorDrawable
+    val bitmap = vectorDrawable.toBitmap()
+    return bitmap.asImageBitmap()
+}
