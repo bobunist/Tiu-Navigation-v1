@@ -192,7 +192,7 @@ fun Map3(
                     }
                 }
         ) {
-            drawRect(Color.Black, Offset(0f, 0f) )
+//            drawRect(Color.Black, Offset(0f, 0f) )
             drawContent(this)
         }
     } else {
