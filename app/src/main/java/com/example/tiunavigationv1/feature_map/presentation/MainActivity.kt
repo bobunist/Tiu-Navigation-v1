@@ -16,11 +16,8 @@ import com.example.tiunavigationv1.feature_map.presentation.map.MapScreen
 import com.example.tiunavigationv1.feature_map.presentation.util.Screen
 import dagger.hilt.android.AndroidEntryPoint
 
-// Room
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     @ExperimentalAnimationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
